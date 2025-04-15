@@ -1,0 +1,174 @@
+type Bundle @entity {
+  id: ID!
+  nativePriceUSD: Float!
+  chainId: Int!
+}
+
+type Wallet @entity {
+  "User address"
+  id: ID!
+
+  walletAddress: String!
+  chainId: Int!
+
+  positions: [Position!]! @derivedFrom(field: "owner")
+}
+
+type Position @entity {
+  " Position Manager + NFT ID "
+  id: ID!
+
+  " id of the non fungible position "
+  nftId: BigInt!
+
+  " lower tick of the position "
+  lowerTick: Int!
+
+  " upper tick of the position "
+  upperTick: Int!
+
+  " total position liquidity "
+  liquidity: BigInt!
+
+  " amount of token0 stored in the position "
+  amount0: BigInt!
+
+  " amount of token1 stored in the position "
+  amount1: BigInt!
+
+  token0Id: ID
+  " currency0 address "
+  token0: Token
+
+  token1Id: ID
+  " currency1 address "
+  token1: Token
+
+  coreTotalUSD: Float!
+
+  managerId: ID!
+  manager: Manager!
+
+  poolId: ID
+  pool: Pool
+
+  ownerId: ID!
+  owner: Wallet!
+
+  ratio: Float!
+
+  chainId: Int!
+
+  "last update block "
+  blockNumber: BigInt!
+
+  "last update timestamp "
+  timestamp: BigInt!
+}
+
+type Token @entity {
+  id: ID!
+
+  name: String!
+
+  symbol: String!
+
+  decimals: Int!
+
+  tvlUSD: Float!
+
+  chainId: Int!
+  tokenAddress: String!
+
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}
+
+type Hook @entity {
+  ## Smart contract address of the token
+  id: ID!
+
+  isWhitelisted: Boolean!
+  isBlacklisted: Boolean!
+
+  chainId: Int!
+  hookAddress: String!
+
+  ## last update block
+  blockNumber: BigInt!
+
+  ## last update timestamp
+  timestamp: BigInt!
+}
+
+type Pool @entity {
+  " poolId "
+  id: ID!
+
+  token0Id: ID!
+  " currency0 address "
+  token0: Token!
+
+  token1Id: ID!
+  " currency1 address "
+  token1: Token!
+
+  token0Decimals: Int!
+  token1Decimals: Int!
+
+  " amount of token0 stored in the pool "
+  amount0: BigInt!
+
+  " amount of token1 stored in the pool "
+  amount1: BigInt!
+
+  " relative price of token0"
+  price0: Float!
+
+  " relative price of token1"
+  price1: Float!
+
+  " pool fee tier "
+  fee: Int!
+
+  hookId: ID!
+  hook: Hook!
+
+  " sqrtPriceX96, used for calculations "
+  sqrtPriceX96: BigInt!
+
+  " current pool tick "
+  currentTick: Int!
+
+  liquidity: BigInt!
+
+  batchBlockMinimumTick: Int!
+  batchBlockMaximumTick: Int!
+
+  # " accumulated protocol fees in token0 "
+  # feeGrowthGlobal0X128: BigInt!
+
+  # " accumulated protocol fees in token1 "
+  # feeGrowthGlobal1X128: BigInt!
+
+  chainId: Int!
+
+  "last update block "
+  blockNumber: BigInt!
+
+  "last update timestamp "
+  timestamp: BigInt!
+
+  # ticks: [Tick!]! @derivedFrom(field: "pool")
+  positions: [Position!]! @derivedFrom(field: "pool")
+}
+
+type Manager @entity {
+  " position manager address "
+  id: ID!
+
+  managerAddress: String!
+  chainId: Int!
+
+  positions: [Position]! @derivedFrom(field: "manager")
+}

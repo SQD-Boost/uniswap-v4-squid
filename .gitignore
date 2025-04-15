@@ -1,0 +1,17 @@
+/node_modules
+/lib
+/builds
+
+/**Versions.json
+
+# IDE files
+/.idea
+.DS_Store
+
+
+node_modules
+lib
+.env
+db
+src/model/*
+src/abi/*

@@ -1,0 +1,18 @@
+manifestVersion: subsquid.io/v0.1
+name: farm-squid
+version: 1
+description: Marcopoloo
+build: {}
+deploy:
+  addons:
+    postgres: {}
+  processor:
+    - name: eth-processor
+      cmd:
+        - sqd
+        - process:prod:eth
+
+  api:
+    cmd:
+      - sqd
+      - serve:prod
