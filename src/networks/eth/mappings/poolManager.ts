@@ -15,6 +15,7 @@ import { createPool, updatePoolStates } from "../utils/entities/pool";
 import { getPricesFromSqrtPriceX96 } from "../utils/helpers/global.helper";
 import { updatePositionAndPool } from "../utils/entities/position";
 import { updatePoolDayData } from "../utils/entities/poolDayData";
+import { updatePoolHourData } from "../utils/entities/poolHourData";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -133,6 +134,16 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       fee
     );
     await updatePoolDayData(
+      mctx,
+      log,
+      id,
+      liquidity,
+      sqrtPriceX96,
+      tick,
+      amount0,
+      amount1
+    );
+    await updatePoolHourData(
       mctx,
       log,
       id,

@@ -365,3 +365,6 @@ export const DAY_MS = 24 * HOUR_MS;
 export function getDayIndex(timestamp: number) {
   return Math.floor(timestamp / DAY_MS);
 }
+export function getHourIndex(timestamp: number) {
+  return Math.floor(timestamp / HOUR_MS);
+}

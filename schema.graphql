@@ -185,6 +185,7 @@ type Pool @entity {
   # ticks: [Tick!]! @derivedFrom(field: "pool")
   positions: [Position!]! @derivedFrom(field: "pool")
   poolDayDatas: [PoolDayData!]! @derivedFrom(field: "pool")
+  poolHourDatas: [PoolHourData!]! @derivedFrom(field: "pool")
 }
 
 type Manager @entity {
@@ -201,6 +202,42 @@ type PoolDayData @entity {
   id: ID!
 
   # timestamp rounded to current day by dividing by 86400
+  date: DateTime!
+
+  poolId: ID!
+  pool: Pool!
+
+  # in range liquidity at end of period
+  liquidity: BigInt!
+  # current price tracker at end of period
+  sqrtPrice: BigInt!
+
+  # current tick at end of period
+  tick: Int!
+
+  # volume in token0
+  volumeToken0: BigInt!
+  # volume in token1
+  volumeToken1: BigInt!
+
+  swapCount: BigInt!
+
+  # opening price of token0
+  open: Float!
+  # high price of token0
+  high: Float!
+  # low price of token0
+  low: Float!
+  # close price of token0
+  close: Float!
+
+  chainId: Int!
+}
+
+type PoolHourData @entity {
+  id: ID!
+
+  # unix timestamp for start of hou
   date: DateTime!
 
   poolId: ID!

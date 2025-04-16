@@ -1,5 +1,5 @@
 import { CHAIN_ID, POOL_MANAGER } from "../constants/network.constant";
-import { getDayIndex } from "./global.helper";
+import { getDayIndex, getHourIndex } from "./global.helper";
 
 export const getBundleId = () => {
   return `${CHAIN_ID}`;
@@ -37,4 +37,8 @@ export const getPoolId = (poolAddress: string) => {
 export const getPoolDayDataId = (poolAddress: string, timestamp: number) => {
   let dayIndex = getDayIndex(timestamp);
   return `${CHAIN_ID}-${poolAddress}-${dayIndex}`;
+};
+export const getPoolHourDataId = (poolAddress: string, timestamp: number) => {
+  let hourIndex = getHourIndex(timestamp);
+  return `${CHAIN_ID}-${poolAddress}-${hourIndex}`;
 };
