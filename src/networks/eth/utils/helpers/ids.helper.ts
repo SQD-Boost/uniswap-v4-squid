@@ -1,7 +1,11 @@
-import { CHAIN_ID } from "../constants/network.constant";
+import { CHAIN_ID, POOL_MANAGER } from "../constants/network.constant";
 
 export const getBundleId = () => {
   return `${CHAIN_ID}`;
+};
+
+export const getPoolManagerId = () => {
+  return `${CHAIN_ID}-${POOL_MANAGER}`;
 };
 
 export const getManagerId = (managerAddress: string) => {

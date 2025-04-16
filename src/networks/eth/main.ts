@@ -28,6 +28,12 @@ import {
 
 import { createManager } from "./utils/entities/manager";
 import { updateBundlePrice } from "./utils/helpers/global.helper";
+import {
+  initializePoolManager,
+  sumPoolAndCountPoolManager,
+} from "./utils/entities/poolManager";
+import { PoolManager } from "../../model";
+import { getPoolManagerId } from "./utils/helpers/ids.helper";
 
 export type MappingContext = ProcessorContext<StoreWithCache> & {
   queue: TaskQueue;
@@ -45,6 +51,7 @@ processor.run(
   async (ctx) => {
     if (!handleOnce) {
       await initializeBundle(ctx);
+      await initializePoolManager(ctx);
       await createNativeToken(ctx);
       await initializeTokens(ctx);
       await createManager(ctx, NFT_POSITION_MANAGER);
@@ -82,6 +89,11 @@ processor.run(
         }
       }
     }
+
+    mctx.queue.add(async () => {
+      await sumPoolAndCountPoolManager(mctx);
+    });
+
     const lastblock = mctx.blocks[mctx.blocks.length - 1].header.height;
     if (lastblock >= BLOCK_UPDATE_ALL_POSITIONS) {
       mctx.queue.add(async () => {
