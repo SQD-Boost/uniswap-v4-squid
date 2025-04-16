@@ -132,6 +132,15 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       amount1,
       fee
     );
-    await updatePoolDayData(mctx, log, id);
+    await updatePoolDayData(
+      mctx,
+      log,
+      id,
+      liquidity,
+      sqrtPriceX96,
+      tick,
+      amount0,
+      amount1
+    );
   });
 };

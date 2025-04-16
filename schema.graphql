@@ -205,7 +205,30 @@ type PoolDayData @entity {
 
   poolId: ID!
   pool: Pool!
+
+  # in range liquidity at end of period
+  liquidity: BigInt!
+  # current price tracker at end of period
+  sqrtPrice: BigInt!
+
+  # current tick at end of period
+  tick: Int!
+
+  # volume in token0
+  volumeToken0: BigInt!
+  # volume in token1
+  volumeToken1: BigInt!
+
   swapCount: BigInt!
+
+  # opening price of token0
+  open: Float!
+  # high price of token0
+  high: Float!
+  # low price of token0
+  low: Float!
+  # close price of token0
+  close: Float!
 
   chainId: Int!
 }
