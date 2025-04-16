@@ -184,6 +184,7 @@ type Pool @entity {
 
   # ticks: [Tick!]! @derivedFrom(field: "pool")
   positions: [Position!]! @derivedFrom(field: "pool")
+  poolDayDatas: [PoolDayData!]! @derivedFrom(field: "pool")
 }
 
 type Manager @entity {
@@ -194,4 +195,17 @@ type Manager @entity {
   chainId: Int!
 
   positions: [Position]! @derivedFrom(field: "manager")
+}
+
+type PoolDayData @entity {
+  id: ID!
+
+  # timestamp rounded to current day by dividing by 86400
+  date: DateTime!
+
+  poolId: ID!
+  pool: Pool!
+  swapCount: BigInt!
+
+  chainId: Int!
 }

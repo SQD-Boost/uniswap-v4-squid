@@ -358,3 +358,10 @@ export function getAmount1(
 
   return amount1;
 }
+
+export const HOUR_MS = 60 * 60 * 1000;
+export const DAY_MS = 24 * HOUR_MS;
+
+export function getDayIndex(timestamp: number) {
+  return Math.floor(timestamp / DAY_MS);
+}

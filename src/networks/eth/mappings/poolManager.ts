@@ -2,13 +2,19 @@ import { MappingContext } from "../main";
 import { Log } from "../processor";
 import * as poolManagerAbi from "../../../abi/poolManager";
 import { createToken } from "../utils/entities/token";
-import { Hook, Pool, Token } from "../../../model";
-import { getHookId, getPoolId, getTokenId } from "../utils/helpers/ids.helper";
+import { Hook, Pool, PoolDayData, Token } from "../../../model";
+import {
+  getHookId,
+  getPoolDayDataId,
+  getPoolId,
+  getTokenId,
+} from "../utils/helpers/ids.helper";
 import { ZERO_ADDRESS } from "../utils/constants/global.contant";
 import { createHook } from "../utils/entities/hook";
 import { createPool, updatePoolStates } from "../utils/entities/pool";
 import { getPricesFromSqrtPriceX96 } from "../utils/helpers/global.helper";
 import { updatePositionAndPool } from "../utils/entities/position";
+import { updatePoolDayData } from "../utils/entities/poolDayData";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -112,6 +118,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
     poolManagerAbi.events.Swap.decode(log);
 
   mctx.store.defer(Pool, getPoolId(id));
+  mctx.store.defer(PoolDayData, getPoolDayDataId(id, log.block.timestamp));
 
   mctx.queue.add(async () => {
     await updatePoolStates(
@@ -125,5 +132,6 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       amount1,
       fee
     );
+    await updatePoolDayData(mctx, log, id);
   });
 };
