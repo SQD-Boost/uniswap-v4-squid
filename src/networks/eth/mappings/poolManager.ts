@@ -11,8 +11,16 @@ import { getPricesFromSqrtPriceX96 } from "../utils/helpers/global.helper";
 import { updatePositionAndPool } from "../utils/entities/position";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
-  let { currency0, currency1, hooks, tick, id, sqrtPriceX96, fee } =
-    poolManagerAbi.events.Initialize.decode(log);
+  let {
+    currency0,
+    currency1,
+    hooks,
+    tick,
+    id,
+    sqrtPriceX96,
+    fee,
+    tickSpacing,
+  } = poolManagerAbi.events.Initialize.decode(log);
 
   mctx.store.defer(Token, getTokenId(currency0));
   mctx.store.defer(Token, getTokenId(currency1));
@@ -72,7 +80,9 @@ export const handleInitialize = (mctx: MappingContext, log: Log) => {
       token0Price,
       token1Price,
       token0Decimals,
-      token1Decimals
+      token1Decimals,
+      tickSpacing,
+      log
     );
     await mctx.store.insert(pool);
   });

@@ -151,6 +151,13 @@ type Pool @entity {
 
   liquidity: BigInt!
 
+  volumeToken0: BigInt!
+  volumeToken1: BigInt!
+
+  collectedFeesToken0: BigInt!
+  collectedFeesToken1: BigInt!
+
+  tickSpacing: Int!
   batchBlockMinimumTick: Int!
   batchBlockMaximumTick: Int!
 
@@ -160,6 +167,8 @@ type Pool @entity {
   # " accumulated protocol fees in token1 "
   # feeGrowthGlobal1X128: BigInt!
 
+  swapCount: BigInt!
+
   chainId: Int!
 
   "last update block "
@@ -167,6 +176,11 @@ type Pool @entity {
 
   "last update timestamp "
   timestamp: BigInt!
+
+  # creation
+  createdAtTimestamp: BigInt!
+  # block pool was created at
+  createdAtBlockNumber: BigInt!
 
   # ticks: [Tick!]! @derivedFrom(field: "pool")
   positions: [Position!]! @derivedFrom(field: "pool")

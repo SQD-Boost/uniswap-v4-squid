@@ -6,6 +6,8 @@ import {
   BASE_FEE,
   IMPOSSIBLE_TICK,
   MINUS_ONE_BI,
+  ONE_BI,
+  ZERO_BI,
 } from "../constants/global.contant";
 import { getPricesFromSqrtPriceX96 } from "../helpers/global.helper";
 import {
@@ -24,7 +26,9 @@ export const createPool = (
   token0Price: number,
   token1Price: number,
   token0Decimals: number,
-  token1Decimals: number
+  token1Decimals: number,
+  tickSpacing: number,
+  log: Log
 ) => {
   let poolId = getPoolId(poolAddress);
   return new Pool({
@@ -33,8 +37,8 @@ export const createPool = (
     token1Id: token1Id,
     token0Decimals: token0Decimals,
     token1Decimals: token1Decimals,
-    amount0: BigInt(0),
-    amount1: BigInt(0),
+    amount0: ZERO_BI,
+    amount1: ZERO_BI,
     price0: token0Price,
     price1: token1Price,
     fee: fee,
@@ -43,10 +47,18 @@ export const createPool = (
     currentTick: tick,
     batchBlockMaximumTick: IMPOSSIBLE_TICK,
     batchBlockMinimumTick: IMPOSSIBLE_TICK,
-    liquidity: BigInt(0),
+    liquidity: ZERO_BI,
+    volumeToken0: ZERO_BI,
+    volumeToken1: ZERO_BI,
+    collectedFeesToken0: ZERO_BI,
+    collectedFeesToken1: ZERO_BI,
+    tickSpacing: tickSpacing,
+    swapCount: ZERO_BI,
     chainId: CHAIN_ID,
-    blockNumber: BigInt(0),
-    timestamp: BigInt(0),
+    blockNumber: ZERO_BI,
+    timestamp: ZERO_BI,
+    createdAtBlockNumber: BigInt(log.block.height),
+    createdAtTimestamp: BigInt(log.block.timestamp),
   });
 };
 
@@ -83,6 +95,7 @@ export const updatePoolStates = async (
   pool.currentTick = tick;
   pool.liquidity = liquidity;
   pool.sqrtPriceX96 = sqrtPriceX96;
+  pool.swapCount += ONE_BI;
 
   const swappedAmount0 = amount0 * MINUS_ONE_BI;
   const swappedAmount1 = amount1 * MINUS_ONE_BI;
@@ -97,6 +110,20 @@ export const updatePoolStates = async (
   //   const fee1 = (swappedAmount1 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
   //   amount1WithFee = swappedAmount1 - fee1;
   // }
+
+  let fee0 = ZERO_BI;
+  let fee1 = ZERO_BI;
+
+  if (swappedAmount0 > ZERO_BI) {
+    fee0 = (swappedAmount0 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
+    pool.volumeToken0 += swappedAmount0;
+  } else if (swappedAmount1 > ZERO_BI) {
+    fee1 = (swappedAmount1 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
+    pool.volumeToken1 += swappedAmount1;
+  }
+
+  pool.collectedFeesToken0 += fee0;
+  pool.collectedFeesToken1 += fee1;
 
   pool.amount0 = pool.amount0 + swappedAmount0;
   pool.amount1 = pool.amount1 + swappedAmount1;

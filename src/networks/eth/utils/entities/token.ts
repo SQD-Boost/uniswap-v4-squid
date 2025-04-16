@@ -91,8 +91,8 @@ export const createNativeToken = async (
       tvlUSD: 0,
       chainId: CHAIN_ID,
       tokenAddress: ZERO_ADDRESS,
-      blockNumber: BigInt(0),
-      timestamp: BigInt(0),
+      blockNumber: ZERO_BI,
+      timestamp: ZERO_BI,
     });
     await ctx.store.upsert(token);
   }

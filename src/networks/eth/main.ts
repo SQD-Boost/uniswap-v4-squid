@@ -32,8 +32,6 @@ import {
   initializePoolManager,
   sumPoolAndCountPoolManager,
 } from "./utils/entities/poolManager";
-import { PoolManager } from "../../model";
-import { getPoolManagerId } from "./utils/helpers/ids.helper";
 
 export type MappingContext = ProcessorContext<StoreWithCache> & {
   queue: TaskQueue;
