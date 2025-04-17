@@ -86,6 +86,11 @@ type Token @entity {
 
   tvlUSD: Float!
 
+  # number of pools containing this token
+  poolCount: Int!
+
+  swapCount: BigInt!
+
   chainId: Int!
   tokenAddress: String!
 

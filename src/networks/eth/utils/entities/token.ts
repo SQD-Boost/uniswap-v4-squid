@@ -1,9 +1,9 @@
 import * as erc20Abi from "../../../../abi/ERC20";
 import * as ERC20NameBytesAbi from "../../../../abi/ERC20NameBytes";
 import * as ERC20SymbolBytes from "../../../../abi/ERC20SymbolBytes";
-import { Token } from "../../../../model";
+import { Pool, Token } from "../../../../model";
 import { MappingContext } from "../../main";
-import { ZERO_ADDRESS } from "../constants/global.contant";
+import { ONE_BI, ZERO_ADDRESS } from "../constants/global.contant";
 import {
   CHAIN_ID,
   native_decimals,
@@ -14,9 +14,13 @@ import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
 import { hexToString, sanitizeString } from "../helpers/global.helper";
 import { In } from "typeorm";
-import { getTokenId } from "../../utils/helpers/ids.helper";
+import { getPoolId, getTokenId } from "../../utils/helpers/ids.helper";
 import { ZERO_BI } from "../../utils/constants/global.contant";
-import { preloadedTokensMetadata, ProcessorContext } from "../../processor";
+import {
+  Log,
+  preloadedTokensMetadata,
+  ProcessorContext,
+} from "../../processor";
 
 export const createToken = async (mctx: MappingContext, currency: string) => {
   const latestBlock = mctx.blocks[mctx.blocks.length - 1];
@@ -70,6 +74,8 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
     symbol: symbol,
     decimals: decimals,
     tvlUSD: 0,
+    poolCount: 0,
+    swapCount: ZERO_BI,
     chainId: CHAIN_ID,
     tokenAddress: currency,
     blockNumber: BigInt(latestBlock.header.height),
@@ -89,6 +95,8 @@ export const createNativeToken = async (
       symbol: native_symbol,
       decimals: native_decimals,
       tvlUSD: 0,
+      poolCount: 0,
+      swapCount: ZERO_BI,
       chainId: CHAIN_ID,
       tokenAddress: ZERO_ADDRESS,
       blockNumber: ZERO_BI,
@@ -124,6 +132,8 @@ export const initializeTokens = async (
         symbol: sanitizeString(tokenInfo.symbol),
         decimals: tokenInfo.decimals,
         tvlUSD: 0,
+        poolCount: 0,
+        swapCount: ZERO_BI,
         chainId: CHAIN_ID,
         tokenAddress: tokenInfo.address,
         blockNumber: ZERO_BI,
@@ -132,4 +142,25 @@ export const initializeTokens = async (
   );
 
   await ctx.store.save(arrayTokens);
+};
+
+export const incrementTokensSwapCount = async (
+  mctx: MappingContext,
+  log: Log,
+  id: string
+) => {
+  let poolId = getPoolId(id);
+  let pool = await mctx.store.get(Pool, poolId);
+  if (!pool) {
+    console.log(`updatePoolStates : Pool ${poolId} not found`);
+    return;
+  }
+
+  const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
+  const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
+
+  token0.swapCount += ONE_BI;
+  token1.swapCount += ONE_BI;
+
+  await mctx.store.upsert([token0, token1]);
 };

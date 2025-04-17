@@ -1,7 +1,7 @@
 import { MappingContext } from "../main";
 import { Log } from "../processor";
 import * as poolManagerAbi from "../../../abi/poolManager";
-import { createToken } from "../utils/entities/token";
+import { createToken, incrementTokensSwapCount } from "../utils/entities/token";
 import {
   Hook,
   Pool,
@@ -50,31 +50,24 @@ export const handleInitialize = (mctx: MappingContext, log: Log) => {
   mctx.queue.add(async () => {
     let token0;
     let token1;
-    let newTokens: Token[] = [];
 
     let token0Id = getTokenId(currency0);
     let token1Id = getTokenId(currency1);
     let hookId = getHookId(hooks);
 
-    if (currency0 !== ZERO_ADDRESS) {
-      token0 = await mctx.store.get(Token, token0Id);
-      if (!token0) {
-        token0 = await createToken(mctx, currency0);
-        newTokens.push(token0);
-      }
+    token0 = await mctx.store.get(Token, token0Id);
+    if (!token0) {
+      token0 = await createToken(mctx, currency0);
     }
+    token0.poolCount += 1;
 
-    if (currency1 !== ZERO_ADDRESS) {
-      token1 = await mctx.store.get(Token, token1Id);
-      if (!token1) {
-        token1 = await createToken(mctx, currency1);
-        newTokens.push(token1);
-      }
+    token1 = await mctx.store.get(Token, token1Id);
+    if (!token1) {
+      token1 = await createToken(mctx, currency1);
     }
+    token1.poolCount += 1;
 
-    if (newTokens.length > 0) {
-      await mctx.store.insert(newTokens);
-    }
+    await mctx.store.upsert([token0, token1]);
 
     let hook = await mctx.store.get(Hook, hookId);
     if (!hook) {
@@ -158,6 +151,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
   mctx.store.defer(Wallet, getWalletId(sender));
 
   mctx.queue.add(async () => {
+    await incrementTokensSwapCount(mctx, log, id);
     await updatePoolStates(
       mctx,
       log,
