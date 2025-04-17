@@ -310,3 +310,21 @@ type SwapReccord @entity {
   # block pool was created at
   txAtBlockNumber: BigInt!
 }
+
+type DonateReccord @entity {
+  id: ID!
+
+  poolId: String!
+  poolEntityId: ID!
+  poolEntity: Pool!
+  amount0: BigInt!
+  amount1: BigInt!
+
+  senderId: ID!
+  sender: Wallet!
+  hash: String!
+  # creation
+  txAtTimestamp: BigInt!
+  # block pool was created at
+  txAtBlockNumber: BigInt!
+}

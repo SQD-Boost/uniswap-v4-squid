@@ -16,6 +16,7 @@ import * as poolManagerAbi from "../../abi/poolManager";
 
 import { handleTransferPosition } from "./mappings/positionManager";
 import {
+  handleDonate,
   handleInitialize,
   handleModifyLiquidity,
   handleSwap,
@@ -80,6 +81,9 @@ processor.run(
               break;
             case poolManagerAbi.events.Swap.topic:
               handleSwap(mctx, log);
+              break;
+            case poolManagerAbi.events.Donate.topic:
+              handleDonate(mctx, log);
               break;
             default:
               break;

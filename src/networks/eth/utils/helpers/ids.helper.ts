@@ -50,3 +50,6 @@ export const getModifyLiquidityReccordId = (logId: String) => {
 export const getSwapReccordId = (logId: String) => {
   return `${CHAIN_ID}-${logId}`;
 };
+export const getDonateReccordId = (logId: String) => {
+  return `${CHAIN_ID}-${logId}`;
+};

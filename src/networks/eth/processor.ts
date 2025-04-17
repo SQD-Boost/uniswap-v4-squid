@@ -47,6 +47,7 @@ export const processor = new EvmBatchProcessor()
       poolManagerAbi.events.Initialize.topic,
       poolManagerAbi.events.ModifyLiquidity.topic,
       poolManagerAbi.events.Swap.topic,
+      poolManagerAbi.events.Donate.topic,
     ],
     transaction: true,
   })

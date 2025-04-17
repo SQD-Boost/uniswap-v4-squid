@@ -29,6 +29,7 @@ import { createModifyLiquidityReccord } from "../utils/entities/modifyLiquidityR
 import { createWallet } from "../utils/entities/wallet";
 import { permissionReccordTx } from "../utils/constants/network.constant";
 import { createSwapReccord } from "../utils/entities/swapReccord";
+import { createDonateReccord } from "../utils/entities/donateReccord";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -209,6 +210,26 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
         sqrtPriceX96,
         tick
       );
+    }
+  });
+};
+
+export const handleDonate = (mctx: MappingContext, log: Log) => {
+  let { id, amount0, amount1, sender } =
+    poolManagerAbi.events.Donate.decode(log);
+
+  mctx.store.defer(Wallet, getWalletId(sender));
+
+  mctx.queue.add(async () => {
+    const walletId = getWalletId(sender);
+    let wallet = await mctx.store.get(Wallet, walletId);
+    if (!wallet) {
+      wallet = createWallet(sender);
+      await mctx.store.insert(wallet);
+    }
+
+    if (permissionReccordTx.donate) {
+      await createDonateReccord(mctx, id, walletId, log, amount0, amount1);
     }
   });
 };
