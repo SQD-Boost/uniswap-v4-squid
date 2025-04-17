@@ -288,3 +288,25 @@ type ModifyLiquidityReccord @entity {
   # block pool was created at
   txAtBlockNumber: BigInt!
 }
+
+type SwapReccord @entity {
+  id: ID!
+
+  poolId: String!
+  poolEntityId: ID!
+  poolEntity: Pool!
+  amount0: BigInt!
+  amount1: BigInt!
+  fee: Int!
+  liquidity: BigInt!
+  senderId: ID!
+  sender: Wallet!
+  sqrtPriceX96: BigInt!
+  tick: Int!
+
+  hash: String!
+  # creation
+  txAtTimestamp: BigInt!
+  # block pool was created at
+  txAtBlockNumber: BigInt!
+}

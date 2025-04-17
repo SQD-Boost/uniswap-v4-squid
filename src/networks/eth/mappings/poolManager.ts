@@ -28,6 +28,7 @@ import { updatePoolHourData } from "../utils/entities/poolHourData";
 import { createModifyLiquidityReccord } from "../utils/entities/modifyLiquidityReccord";
 import { createWallet } from "../utils/entities/wallet";
 import { permissionReccordTx } from "../utils/constants/network.constant";
+import { createSwapReccord } from "../utils/entities/swapReccord";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -153,6 +154,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
   mctx.store.defer(Pool, getPoolId(id));
   mctx.store.defer(PoolDayData, getPoolDayDataId(id, log.block.timestamp));
   mctx.store.defer(PoolHourData, getPoolHourDataId(id, log.block.timestamp));
+  mctx.store.defer(Wallet, getWalletId(sender));
 
   mctx.queue.add(async () => {
     await updatePoolStates(
@@ -186,5 +188,27 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       amount0,
       amount1
     );
+
+    const walletId = getWalletId(sender);
+    let wallet = await mctx.store.get(Wallet, walletId);
+    if (!wallet) {
+      wallet = createWallet(sender);
+      await mctx.store.insert(wallet);
+    }
+
+    if (permissionReccordTx.swap) {
+      await createSwapReccord(
+        mctx,
+        id,
+        walletId,
+        log,
+        amount0,
+        amount1,
+        fee,
+        liquidity,
+        sqrtPriceX96,
+        tick
+      );
+    }
   });
 };

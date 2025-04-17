@@ -50,4 +50,5 @@ export const IS_NATIVE_TOKEN0 = true;
 
 export const permissionReccordTx = {
   modifyLiquidity: false,
+  swap: true,
 };
