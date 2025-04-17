@@ -38,6 +38,10 @@ import {
 import { createSwapReccord } from "../utils/entities/swapReccord";
 import { createDonateReccord } from "../utils/entities/donateReccord";
 import { updateBundlePrice } from "../utils/entities/bundle";
+import {
+  incrementTokensDayDataSwapCount,
+  updateTokenDayData,
+} from "../utils/entities/tokenDayData";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -160,6 +164,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
 
   mctx.queue.add(async () => {
     await incrementTokensSwapCount(mctx, log, id);
+    await incrementTokensDayDataSwapCount(mctx, log, id);
     await updatePoolStates(
       mctx,
       log,
@@ -194,7 +199,10 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
     if (id === BUNDLE_SOURCE_POOL_ID) {
       await updateBundlePrice(mctx);
     }
-    await updateTokenPrice(mctx, id);
+    const priceUpdate = await updateTokenPrice(mctx, id);
+    if (priceUpdate) {
+      await updateTokenDayData(mctx, log, priceUpdate);
+    }
 
     const walletId = getWalletId(sender);
     let wallet = await mctx.store.get(Wallet, walletId);

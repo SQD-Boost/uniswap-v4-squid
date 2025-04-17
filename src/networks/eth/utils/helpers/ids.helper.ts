@@ -38,6 +38,10 @@ export const getPoolDayDataId = (poolAddress: string, timestamp: number) => {
   let dayIndex = getDayIndex(timestamp);
   return `${CHAIN_ID}-${poolAddress}-${dayIndex}`;
 };
+export const getTokenDayDataId = (tokenId: string, timestamp: number) => {
+  let dayIndex = getDayIndex(timestamp);
+  return `${tokenId}-${dayIndex}`;
+};
 export const getPoolHourDataId = (poolAddress: string, timestamp: number) => {
   let hourIndex = getHourIndex(timestamp);
   return `${CHAIN_ID}-${poolAddress}-${hourIndex}`;

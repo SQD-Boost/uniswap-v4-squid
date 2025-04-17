@@ -179,7 +179,7 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
   let pool = await mctx.store.get(Pool, poolId);
   if (!pool) {
     console.log(`updatePoolStates : Pool ${poolId} not found`);
-    return;
+    return null;
   }
 
   const isToken0Base = BASE_TOKEN_ADDRESSES.some(
@@ -190,7 +190,7 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
     (address) => getTokenId(address).toLowerCase() === pool.token1Id
   );
 
-  if (!isToken0Base && !isToken1Base) return;
+  if (!isToken0Base && !isToken1Base) return null;
 
   const isToken0Stable = STABLE_ADDRESSES.some(
     (address) => getTokenId(address).toLowerCase() === pool.token0Id
@@ -203,18 +203,27 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
     const token = await mctx.store.getOrFail(Token, tokenId);
     token.price = price;
     await mctx.store.upsert(token);
+    return { tokenId, price };
   };
 
   if (isToken0Stable) {
-    await updatePrice(pool.token1Id, pool.price0);
+    return await updatePrice(pool.token1Id, pool.price0);
   } else if (isToken1Stable) {
-    await updatePrice(pool.token0Id, pool.price1);
+    return await updatePrice(pool.token0Id, pool.price1);
   } else {
     const bundle = await mctx.store.getOrFail(Bundle, getBundleId());
     if (isToken0Base) {
-      await updatePrice(pool.token1Id, pool.price0 * bundle.nativePriceUSD);
+      return await updatePrice(
+        pool.token1Id,
+        pool.price0 * bundle.nativePriceUSD
+      );
     } else if (isToken1Base) {
-      await updatePrice(pool.token0Id, pool.price1 * bundle.nativePriceUSD);
+      return await updatePrice(
+        pool.token0Id,
+        pool.price1 * bundle.nativePriceUSD
+      );
     }
   }
+
+  return null;
 };
