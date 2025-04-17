@@ -161,27 +161,6 @@ export const calculateCoreTotalUSD = (
   }
 };
 
-export const updateBundlePrice = async (mctx: MappingContext) => {
-  const bundleSourcePool = await mctx.store.get(
-    Pool,
-    getPoolId(BUNDLE_SOURCE_POOL_ID)
-  );
-  if (!bundleSourcePool) {
-    console.log(`Bundle source pool not found: ${BUNDLE_SOURCE_POOL_ID}`);
-    return;
-  }
-
-  await mctx.store.upsert(
-    new Bundle({
-      id: getBundleId(),
-      nativePriceUSD: IS_NATIVE_TOKEN0
-        ? bundleSourcePool.price1
-        : bundleSourcePool.price0,
-      chainId: CHAIN_ID,
-    })
-  );
-};
-
 export function sanitizeString(str: string | null | undefined): string {
   if (!str) return "";
 

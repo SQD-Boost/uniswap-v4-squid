@@ -28,7 +28,6 @@ import {
 } from "./utils/entities/position";
 
 import { createManager } from "./utils/entities/manager";
-import { updateBundlePrice } from "./utils/helpers/global.helper";
 import {
   initializePoolManager,
   sumPoolAndCountPoolManager,
@@ -105,7 +104,6 @@ processor.run(
 
           hasUpdatedPositions = true;
         }
-        await updateBundlePrice(mctx);
         await updateAllPositionsSwapped(mctx);
         // update position.coreTotalUsd missing and token.tvlUsd
       });

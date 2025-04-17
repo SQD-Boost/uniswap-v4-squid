@@ -27,9 +27,13 @@ import { updatePoolDayData } from "../utils/entities/poolDayData";
 import { updatePoolHourData } from "../utils/entities/poolHourData";
 import { createModifyLiquidityReccord } from "../utils/entities/modifyLiquidityReccord";
 import { createWallet } from "../utils/entities/wallet";
-import { permissionReccordTx } from "../utils/constants/network.constant";
+import {
+  BUNDLE_SOURCE_POOL_ID,
+  permissionReccordTx,
+} from "../utils/constants/network.constant";
 import { createSwapReccord } from "../utils/entities/swapReccord";
 import { createDonateReccord } from "../utils/entities/donateReccord";
+import { updateBundlePrice } from "../utils/entities/bundle";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -183,6 +187,9 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       amount0,
       amount1
     );
+    if (id === BUNDLE_SOURCE_POOL_ID) {
+      await updateBundlePrice(mctx);
+    }
 
     const walletId = getWalletId(sender);
     let wallet = await mctx.store.get(Wallet, walletId);
