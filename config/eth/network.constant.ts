@@ -47,3 +47,7 @@ export const BUNDLE_SOURCE_POOL_ID =
   "0x21c67e77068de97969ba93d4aab21826d33ca12bb9f565d8496e8fda8a82ca27";
 
 export const IS_NATIVE_TOKEN0 = true;
+
+export const permissionReccordTx = {
+  modifyLiquidity: false,
+};

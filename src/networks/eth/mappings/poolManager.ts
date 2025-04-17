@@ -2,12 +2,13 @@ import { MappingContext } from "../main";
 import { Log } from "../processor";
 import * as poolManagerAbi from "../../../abi/poolManager";
 import { createToken } from "../utils/entities/token";
-import { Hook, Pool, PoolDayData, Token } from "../../../model";
+import { Hook, Pool, PoolDayData, Token, Wallet } from "../../../model";
 import {
   getHookId,
   getPoolDayDataId,
   getPoolId,
   getTokenId,
+  getWalletId,
 } from "../utils/helpers/ids.helper";
 import { ZERO_ADDRESS } from "../utils/constants/global.contant";
 import { createHook } from "../utils/entities/hook";
@@ -16,6 +17,9 @@ import { getPricesFromSqrtPriceX96 } from "../utils/helpers/global.helper";
 import { updatePositionAndPool } from "../utils/entities/position";
 import { updatePoolDayData } from "../utils/entities/poolDayData";
 import { updatePoolHourData } from "../utils/entities/poolHourData";
+import { createModifyLiquidityReccord } from "../utils/entities/modifyLiquidityReccord";
+import { createWallet } from "../utils/entities/wallet";
+import { permissionReccordTx } from "../utils/constants/network.constant";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -100,6 +104,7 @@ export const handleModifyLiquidity = (mctx: MappingContext, log: Log) => {
     poolManagerAbi.events.ModifyLiquidity.decode(log);
 
   mctx.store.defer(Pool, getPoolId(id));
+  mctx.store.defer(Wallet, getWalletId(sender));
 
   mctx.queue.add(async () => {
     await updatePositionAndPool(
@@ -111,6 +116,25 @@ export const handleModifyLiquidity = (mctx: MappingContext, log: Log) => {
       tickLower,
       tickUpper
     );
+    const walletId = getWalletId(sender);
+    let wallet = await mctx.store.get(Wallet, walletId);
+    if (!wallet) {
+      wallet = createWallet(sender);
+      await mctx.store.insert(wallet);
+    }
+
+    if (permissionReccordTx.modifyLiquidity) {
+      await createModifyLiquidityReccord(
+        mctx,
+        id,
+        liquidityDelta,
+        salt,
+        walletId,
+        tickLower,
+        tickUpper,
+        log
+      );
+    }
   });
 };
 

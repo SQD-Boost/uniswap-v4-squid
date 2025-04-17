@@ -42,3 +42,7 @@ export const getPoolHourDataId = (poolAddress: string, timestamp: number) => {
   let hourIndex = getHourIndex(timestamp);
   return `${CHAIN_ID}-${poolAddress}-${hourIndex}`;
 };
+
+export const getModifyLiquidityReccordId = (logId: String) => {
+  return `${CHAIN_ID}-${logId}`;
+};

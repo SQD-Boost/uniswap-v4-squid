@@ -269,3 +269,22 @@ type PoolHourData @entity {
 
   chainId: Int!
 }
+
+type ModifyLiquidityReccord @entity {
+  id: ID!
+  poolId: String!
+  poolEntityId: ID!
+  poolEntity: Pool!
+  liquidityDelta: BigInt!
+  salt: String!
+  senderId: ID!
+  sender: Wallet!
+  tickLower: Int!
+  tickUpper: Int!
+
+  hash: String!
+  # creation
+  txAtTimestamp: BigInt!
+  # block pool was created at
+  txAtBlockNumber: BigInt!
+}

@@ -50,7 +50,6 @@ export const processor = new EvmBatchProcessor()
     ],
     transaction: true,
   })
-
   .setFields({});
 
 export type Fields = EvmBatchProcessorFields<typeof processor>;
