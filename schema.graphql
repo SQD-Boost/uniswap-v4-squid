@@ -100,6 +100,7 @@ type Token @entity {
   timestamp: BigInt!
 
   tokenDayDatas: [TokenDayData!]! @derivedFrom(field: "token")
+  tokenHourDatas: [TokenHourData!]! @derivedFrom(field: "token")
 }
 
 type Hook @entity {
@@ -339,6 +340,28 @@ type DonateReccord @entity {
 }
 
 type TokenDayData @entity {
+  id: ID!
+  # timestamp rounded to current day by dividing by 86400
+  date: DateTime!
+
+  tokenId: ID!
+  token: Token!
+
+  swapCount: BigInt!
+
+  # opening price USD
+  open: Float!
+  # high price USD
+  high: Float!
+  # low price USD
+  low: Float!
+  # close price USD
+  close: Float!
+
+  chainId: Int!
+}
+
+type TokenHourData @entity {
   id: ID!
   # timestamp rounded to current day by dividing by 86400
   date: DateTime!

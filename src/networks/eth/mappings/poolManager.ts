@@ -42,6 +42,10 @@ import {
   incrementTokensDayDataSwapCount,
   updateTokenDayData,
 } from "../utils/entities/tokenDayData";
+import {
+  incrementTokensHourDataSwapCount,
+  updateTokenHourData,
+} from "../utils/entities/tokenHourData";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -165,6 +169,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
   mctx.queue.add(async () => {
     await incrementTokensSwapCount(mctx, log, id);
     await incrementTokensDayDataSwapCount(mctx, log, id);
+    await incrementTokensHourDataSwapCount(mctx, log, id);
     await updatePoolStates(
       mctx,
       log,
@@ -202,6 +207,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
     const priceUpdate = await updateTokenPrice(mctx, id);
     if (priceUpdate) {
       await updateTokenDayData(mctx, log, priceUpdate);
+      await updateTokenHourData(mctx, log, priceUpdate);
     }
 
     const walletId = getWalletId(sender);
