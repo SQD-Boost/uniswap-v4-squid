@@ -1,7 +1,11 @@
 import { MappingContext } from "../main";
 import { Log } from "../processor";
 import * as poolManagerAbi from "../../../abi/poolManager";
-import { createToken, incrementTokensSwapCount } from "../utils/entities/token";
+import {
+  createToken,
+  incrementTokensSwapCount,
+  updateTokenPrice,
+} from "../utils/entities/token";
 import {
   Hook,
   Pool,
@@ -190,6 +194,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
     if (id === BUNDLE_SOURCE_POOL_ID) {
       await updateBundlePrice(mctx);
     }
+    await updateTokenPrice(mctx, id);
 
     const walletId = getWalletId(sender);
     let wallet = await mctx.store.get(Wallet, walletId);

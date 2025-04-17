@@ -1,20 +1,26 @@
 import * as erc20Abi from "../../../../abi/ERC20";
 import * as ERC20NameBytesAbi from "../../../../abi/ERC20NameBytes";
 import * as ERC20SymbolBytes from "../../../../abi/ERC20SymbolBytes";
-import { Pool, Token } from "../../../../model";
+import { Bundle, Pool, Token } from "../../../../model";
 import { MappingContext } from "../../main";
 import { ONE_BI, ZERO_ADDRESS } from "../constants/global.contant";
 import {
+  BASE_TOKEN_ADDRESSES,
   CHAIN_ID,
   native_decimals,
   native_name,
   native_symbol,
+  STABLE_ADDRESSES,
 } from "../constants/network.constant";
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
 import { hexToString, sanitizeString } from "../helpers/global.helper";
 import { In } from "typeorm";
-import { getPoolId, getTokenId } from "../../utils/helpers/ids.helper";
+import {
+  getBundleId,
+  getPoolId,
+  getTokenId,
+} from "../../utils/helpers/ids.helper";
 import { ZERO_BI } from "../../utils/constants/global.contant";
 import {
   Log,
@@ -73,6 +79,7 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
     name: name,
     symbol: symbol,
     decimals: decimals,
+    price: 0,
     tvlUSD: 0,
     poolCount: 0,
     swapCount: ZERO_BI,
@@ -95,6 +102,7 @@ export const createNativeToken = async (
       symbol: native_symbol,
       decimals: native_decimals,
       tvlUSD: 0,
+      price: 0,
       poolCount: 0,
       swapCount: ZERO_BI,
       chainId: CHAIN_ID,
@@ -131,6 +139,7 @@ export const initializeTokens = async (
         name: sanitizeString(tokenInfo.name),
         symbol: sanitizeString(tokenInfo.symbol),
         decimals: tokenInfo.decimals,
+        price: 0,
         tvlUSD: 0,
         poolCount: 0,
         swapCount: ZERO_BI,
@@ -163,4 +172,49 @@ export const incrementTokensSwapCount = async (
   token1.swapCount += ONE_BI;
 
   await mctx.store.upsert([token0, token1]);
+};
+
+export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
+  let poolId = getPoolId(id);
+  let pool = await mctx.store.get(Pool, poolId);
+  if (!pool) {
+    console.log(`updatePoolStates : Pool ${poolId} not found`);
+    return;
+  }
+
+  const isToken0Base = BASE_TOKEN_ADDRESSES.some(
+    (address) => getTokenId(address).toLowerCase() === pool.token0Id
+  );
+
+  const isToken1Base = BASE_TOKEN_ADDRESSES.some(
+    (address) => getTokenId(address).toLowerCase() === pool.token1Id
+  );
+
+  if (!isToken0Base && !isToken1Base) return;
+
+  const isToken0Stable = STABLE_ADDRESSES.some(
+    (address) => getTokenId(address).toLowerCase() === pool.token0Id
+  );
+  const isToken1Stable = STABLE_ADDRESSES.some(
+    (address) => getTokenId(address).toLowerCase() === pool.token1Id
+  );
+
+  const updatePrice = async (tokenId: string, price: number) => {
+    const token = await mctx.store.getOrFail(Token, tokenId);
+    token.price = price;
+    await mctx.store.upsert(token);
+  };
+
+  if (isToken0Stable) {
+    await updatePrice(pool.token1Id, pool.price0);
+  } else if (isToken1Stable) {
+    await updatePrice(pool.token0Id, pool.price1);
+  } else {
+    const bundle = await mctx.store.getOrFail(Bundle, getBundleId());
+    if (isToken0Base) {
+      await updatePrice(pool.token1Id, pool.price0 * bundle.nativePriceUSD);
+    } else if (isToken1Base) {
+      await updatePrice(pool.token0Id, pool.price1 * bundle.nativePriceUSD);
+    }
+  }
 };
