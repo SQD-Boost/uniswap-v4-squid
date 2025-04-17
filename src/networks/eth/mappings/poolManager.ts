@@ -2,10 +2,18 @@ import { MappingContext } from "../main";
 import { Log } from "../processor";
 import * as poolManagerAbi from "../../../abi/poolManager";
 import { createToken } from "../utils/entities/token";
-import { Hook, Pool, PoolDayData, Token, Wallet } from "../../../model";
+import {
+  Hook,
+  Pool,
+  PoolDayData,
+  PoolHourData,
+  Token,
+  Wallet,
+} from "../../../model";
 import {
   getHookId,
   getPoolDayDataId,
+  getPoolHourDataId,
   getPoolId,
   getTokenId,
   getWalletId,
@@ -144,6 +152,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
 
   mctx.store.defer(Pool, getPoolId(id));
   mctx.store.defer(PoolDayData, getPoolDayDataId(id, log.block.timestamp));
+  mctx.store.defer(PoolHourData, getPoolHourDataId(id, log.block.timestamp));
 
   mctx.queue.add(async () => {
     await updatePoolStates(
