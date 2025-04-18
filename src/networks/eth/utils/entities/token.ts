@@ -74,12 +74,16 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
 
   const tokenId = getTokenId(currency);
 
+  const isTokenStable = STABLE_ADDRESSES.some(
+    (address) => getTokenId(address).toLowerCase() === tokenId
+  );
+
   return new Token({
     id: tokenId,
     name: name,
     symbol: symbol,
     decimals: decimals,
-    price: 0,
+    price: isTokenStable ? 1 : 0,
     tvlUSD: 0,
     poolCount: 0,
     swapCount: ZERO_BI,
@@ -132,23 +136,26 @@ export const initializeTokens = async (
     (token) => !tokensAddressRecords.includes(token.address)
   );
 
-  let arrayTokens = missingTokens.map(
-    (tokenInfo) =>
-      new Token({
-        id: getTokenId(tokenInfo.address),
-        name: sanitizeString(tokenInfo.name),
-        symbol: sanitizeString(tokenInfo.symbol),
-        decimals: tokenInfo.decimals,
-        price: 0,
-        tvlUSD: 0,
-        poolCount: 0,
-        swapCount: ZERO_BI,
-        chainId: CHAIN_ID,
-        tokenAddress: tokenInfo.address,
-        blockNumber: ZERO_BI,
-        timestamp: ZERO_BI,
-      })
-  );
+  let arrayTokens = missingTokens.map((tokenInfo) => {
+    const tokenId = getTokenId(tokenInfo.address);
+    const isTokenStable = STABLE_ADDRESSES.some(
+      (address) => getTokenId(address).toLowerCase() === tokenId
+    );
+    return new Token({
+      id: tokenId,
+      name: sanitizeString(tokenInfo.name),
+      symbol: sanitizeString(tokenInfo.symbol),
+      decimals: tokenInfo.decimals,
+      price: isTokenStable ? 1 : 0,
+      tvlUSD: 0,
+      poolCount: 0,
+      swapCount: ZERO_BI,
+      chainId: CHAIN_ID,
+      tokenAddress: tokenInfo.address,
+      blockNumber: ZERO_BI,
+      timestamp: ZERO_BI,
+    });
+  });
 
   await ctx.store.save(arrayTokens);
 };
