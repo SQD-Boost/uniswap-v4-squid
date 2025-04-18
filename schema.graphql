@@ -227,8 +227,13 @@ type PoolDayData @entity {
 
   # volume in token0
   volumeToken0: BigInt!
+  volumeToken0D: Float!
   # volume in token1
   volumeToken1: BigInt!
+  volumeToken1D: Float!
+
+  # volume in USD
+  volumeUSD: Float!
 
   swapCount: BigInt!
 
@@ -263,8 +268,14 @@ type PoolHourData @entity {
 
   # volume in token0
   volumeToken0: BigInt!
+  # volume in token0 decimal
+  volumeToken0D: Float!
   # volume in token1
   volumeToken1: BigInt!
+  volumeToken1D: Float!
+
+  # volume in USD
+  volumeUSD: Float!
 
   swapCount: BigInt!
 

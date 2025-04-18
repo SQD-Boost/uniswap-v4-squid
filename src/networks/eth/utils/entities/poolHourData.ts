@@ -1,9 +1,10 @@
-import { Pool, PoolHourData } from "../../../../model";
+import { Pool, PoolHourData, Token } from "../../../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { MINUS_ONE_BI, ONE_BI, ZERO_BI } from "../constants/global.contant";
 import { CHAIN_ID } from "../constants/network.constant";
 import {
+  convertTokenToDecimal,
   getHourIndex,
   getPricesFromSqrtPriceX96,
   HOUR_MS,
@@ -26,7 +27,10 @@ export const createPoolHourData = (
     sqrtPrice: ZERO_BI,
     tick: 0,
     volumeToken0: ZERO_BI,
+    volumeToken0D: 0,
     volumeToken1: ZERO_BI,
+    volumeToken1D: 0,
+    volumeUSD: 0,
     swapCount: ZERO_BI,
     open: token0Price,
     high: token0Price,
@@ -78,9 +82,25 @@ export const updatePoolHourData = async (
   const swappedAmount1 = amount1 * MINUS_ONE_BI;
 
   if (swappedAmount0 > ZERO_BI) {
+    const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
+
     poolHourData.volumeToken0 += swappedAmount0;
+    poolHourData.volumeToken0D = convertTokenToDecimal(
+      poolHourData.volumeToken0,
+      pool.token0Decimals
+    );
+    poolHourData.volumeUSD +=
+      convertTokenToDecimal(swappedAmount0, token0.decimals) * token0.price;
   } else if (swappedAmount1 > ZERO_BI) {
+    const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
+
     poolHourData.volumeToken1 += swappedAmount1;
+    poolHourData.volumeToken1D = convertTokenToDecimal(
+      poolHourData.volumeToken1,
+      pool.token1Decimals
+    );
+    poolHourData.volumeUSD +=
+      convertTokenToDecimal(swappedAmount1, token1.decimals) * token1.price;
   }
 
   await mctx.store.upsert(poolHourData);
