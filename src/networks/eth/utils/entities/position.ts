@@ -10,7 +10,12 @@ import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { IMPOSSIBLE_TICK, ZERO_BI } from "../constants/global.contant";
 import { CHAIN_ID, NFT_POSITION_MANAGER } from "../constants/network.constant";
-import { getAmount0, getAmount1, getAmounts } from "../helpers/global.helper";
+import {
+  convertTokenToDecimal,
+  getAmount0,
+  getAmount1,
+  getAmounts,
+} from "../helpers/global.helper";
 import { getManagerId, getPoolId, getPositionId } from "../helpers/ids.helper";
 
 export const createPositionUpdateOwner = (log: Log, nftId: bigint) => {
@@ -77,6 +82,9 @@ export const updatePositionAndPool = async (
 
     pool.amount0 = pool.amount0 + BigInt(amount0Raw);
     pool.amount1 = pool.amount1 + BigInt(amount1Raw);
+
+    pool.amount0D = convertTokenToDecimal(pool.amount0, pool.token0Decimals);
+    pool.amount1D = convertTokenToDecimal(pool.amount1, pool.token1Decimals);
 
     await mctx.store.upsert(pool);
   }

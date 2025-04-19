@@ -1,6 +1,3 @@
-import { In, IsNull, Not } from "typeorm";
-import { Bundle, Pool, Position, Token } from "../../../../model";
-import { MappingContext } from "../../main";
 import {
   MAX_TICK,
   MaxUint256,
@@ -13,13 +10,10 @@ import {
 } from "../constants/global.contant";
 import {
   BASE_TOKEN_ADDRESSES,
-  BUNDLE_SOURCE_POOL_ID,
-  CHAIN_ID,
-  IS_NATIVE_TOKEN0,
   STABLE_DECIMALS,
   WRAP_NATIVE,
 } from "../constants/network.constant";
-import { getBundleId, getPoolId, getTokenId } from "./ids.helper";
+import { getTokenId } from "./ids.helper";
 
 export function hexToString(hex: string): string {
   hex = hex.startsWith("0x") ? hex.slice(2) : hex;
@@ -99,9 +93,24 @@ export function getAmounts(
   return { amount0: 0, amount1: 0 };
 }
 
-export const convertTokenToDecimal = (amount: bigint, decimals: number) => {
-  return Number(amount) * 10 ** -decimals;
+export const convertTokenToDecimal = (
+  weiBalanceBigInt: bigint,
+  decimals: number
+) => {
+  let weiBalanceStr = weiBalanceBigInt.toString();
+  weiBalanceStr = weiBalanceStr.padStart(decimals + 1, "0");
+
+  const position = weiBalanceStr.length - decimals;
+  const etherStr = `${weiBalanceStr.substring(
+    0,
+    position
+  )}.${weiBalanceStr.substring(position)}`;
+
+  const trimmedEtherStr = etherStr.replace(/\.?0+$/, "");
+
+  return Number(trimmedEtherStr);
 };
+
 export const getAllTokensInBaseAmount = (
   token0Id: string,
   token0Decimals: number,

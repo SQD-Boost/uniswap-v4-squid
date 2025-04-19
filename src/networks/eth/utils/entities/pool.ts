@@ -1,4 +1,4 @@
-import { Pool } from "../../../../model";
+import { Pool, Token } from "../../../../model";
 import { MappingContext } from "../../main";
 import { getPoolId } from "../helpers/ids.helper";
 import { Log } from "../../processor";
@@ -9,7 +9,10 @@ import {
   ONE_BI,
   ZERO_BI,
 } from "../constants/global.contant";
-import { getPricesFromSqrtPriceX96 } from "../helpers/global.helper";
+import {
+  convertTokenToDecimal,
+  getPricesFromSqrtPriceX96,
+} from "../helpers/global.helper";
 import {
   BLOCK_UPDATE_ALL_POSITIONS,
   CHAIN_ID,
@@ -38,7 +41,9 @@ export const createPool = (
     token0Decimals: token0Decimals,
     token1Decimals: token1Decimals,
     amount0: ZERO_BI,
+    amount0D: 0,
     amount1: ZERO_BI,
+    amount1D: 0,
     price0: token0Price,
     price1: token1Price,
     fee: fee,
@@ -49,7 +54,10 @@ export const createPool = (
     batchBlockMinimumTick: IMPOSSIBLE_TICK,
     liquidity: ZERO_BI,
     volumeToken0: ZERO_BI,
+    volumeToken0D: 0,
     volumeToken1: ZERO_BI,
+    volumeToken1D: 0,
+    volumeUSD: 0,
     collectedFeesToken0: ZERO_BI,
     collectedFeesToken1: ZERO_BI,
     tickSpacing: tickSpacing,
@@ -115,11 +123,27 @@ export const updatePoolStates = async (
   let fee1 = ZERO_BI;
 
   if (swappedAmount0 > ZERO_BI) {
+    const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
+
     fee0 = (swappedAmount0 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
     pool.volumeToken0 += swappedAmount0;
+    pool.volumeToken0D = convertTokenToDecimal(
+      pool.volumeToken0,
+      pool.token0Decimals
+    );
+    pool.volumeUSD +=
+      convertTokenToDecimal(swappedAmount0, pool.token0Decimals) * token0.price;
   } else if (swappedAmount1 > ZERO_BI) {
+    const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
+
     fee1 = (swappedAmount1 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
     pool.volumeToken1 += swappedAmount1;
+    pool.volumeToken1D = convertTokenToDecimal(
+      pool.volumeToken1,
+      pool.token1Decimals
+    );
+    pool.volumeUSD +=
+      convertTokenToDecimal(swappedAmount1, pool.token1Decimals) * token1.price;
   }
 
   pool.collectedFeesToken0 += fee0;
@@ -127,6 +151,9 @@ export const updatePoolStates = async (
 
   pool.amount0 = pool.amount0 + swappedAmount0;
   pool.amount1 = pool.amount1 + swappedAmount1;
+
+  pool.amount0D = convertTokenToDecimal(pool.amount0, pool.token0Decimals);
+  pool.amount1D = convertTokenToDecimal(pool.amount1, pool.token1Decimals);
 
   const { token0Price, token1Price } = getPricesFromSqrtPriceX96(
     sqrtPriceX96,

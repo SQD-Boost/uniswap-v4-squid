@@ -137,9 +137,11 @@ type Pool @entity {
 
   " amount of token0 stored in the pool "
   amount0: BigInt!
+  amount0D: Float!
 
   " amount of token1 stored in the pool "
   amount1: BigInt!
+  amount1D: Float!
 
   " relative price of token0"
   price0: Float!
@@ -162,7 +164,12 @@ type Pool @entity {
   liquidity: BigInt!
 
   volumeToken0: BigInt!
+  volumeToken0D: Float!
+
   volumeToken1: BigInt!
+  volumeToken1D: Float!
+
+  volumeUSD: Float!
 
   collectedFeesToken0: BigInt!
   collectedFeesToken1: BigInt!
