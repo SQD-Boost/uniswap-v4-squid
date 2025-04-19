@@ -105,7 +105,7 @@ processor.run(
           hasUpdatedPositions = true;
         }
         await updateAllPositionsSwapped(mctx);
-        // update position.coreTotalUsd missing and token.tvlUsd
+        // update position.coreTotalUsd missing and token.tvlUsd and pool.tvlUSD
       });
     }
 

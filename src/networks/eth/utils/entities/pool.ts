@@ -60,6 +60,8 @@ export const createPool = (
     volumeUSD: 0,
     collectedFeesToken0: ZERO_BI,
     collectedFeesToken1: ZERO_BI,
+    collectedFeesUSD: 0,
+    tvlUSD: 0,
     tickSpacing: tickSpacing,
     swapCount: ZERO_BI,
     chainId: CHAIN_ID,
@@ -122,6 +124,9 @@ export const updatePoolStates = async (
   let fee0 = ZERO_BI;
   let fee1 = ZERO_BI;
 
+  let fee0USD = 0;
+  let fee1USD = 0;
+
   if (swappedAmount0 > ZERO_BI) {
     const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
 
@@ -133,6 +138,8 @@ export const updatePoolStates = async (
     );
     pool.volumeUSD +=
       convertTokenToDecimal(swappedAmount0, pool.token0Decimals) * token0.price;
+
+    fee0USD = convertTokenToDecimal(fee0, pool.token0Decimals) * token0.price;
   } else if (swappedAmount1 > ZERO_BI) {
     const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
 
@@ -144,10 +151,14 @@ export const updatePoolStates = async (
     );
     pool.volumeUSD +=
       convertTokenToDecimal(swappedAmount1, pool.token1Decimals) * token1.price;
+
+    fee1USD = convertTokenToDecimal(fee1, pool.token1Decimals) * token1.price;
   }
 
   pool.collectedFeesToken0 += fee0;
   pool.collectedFeesToken1 += fee1;
+
+  pool.collectedFeesUSD = fee0USD + fee1USD;
 
   pool.amount0 = pool.amount0 + swappedAmount0;
   pool.amount1 = pool.amount1 + swappedAmount1;
