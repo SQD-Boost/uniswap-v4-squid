@@ -28,7 +28,9 @@ export const createPositionUpdateOwner = (log: Log, nftId: bigint) => {
     upperTick: 0,
     liquidity: ZERO_BI,
     amount0: ZERO_BI,
+    amount0D: 0,
     amount1: ZERO_BI,
+    amount1D: 0,
     coreTotalUSD: 0,
     managerId: getManagerId(log.address),
     chainId: CHAIN_ID,
@@ -112,6 +114,16 @@ export const updatePositionAndPool = async (
 
     position.amount0 = BigInt(Math.floor(amount0));
     position.amount1 = BigInt(Math.floor(amount1));
+
+    position.amount0D = convertTokenToDecimal(
+      pool.amount0,
+      pool.token0Decimals
+    );
+    position.amount1D = convertTokenToDecimal(
+      pool.amount1,
+      pool.token1Decimals
+    );
+
     position.token0Id = pool.token0Id;
     position.token1Id = pool.token1Id;
 
@@ -174,6 +186,15 @@ export const updateAllPositionsOnce = async (mctx: MappingContext) => {
 
       position.amount0 = BigInt(Math.floor(amount0));
       position.amount1 = BigInt(Math.floor(amount1));
+
+      position.amount0D = convertTokenToDecimal(
+        pool.amount0,
+        pool.token0Decimals
+      );
+      position.amount1D = convertTokenToDecimal(
+        pool.amount1,
+        pool.token1Decimals
+      );
 
       const ratio = getPositionRatio(
         position.amount0,
@@ -241,6 +262,15 @@ export const updateAllPositionsSwapped = async (mctx: MappingContext) => {
 
       position.amount0 = BigInt(Math.floor(amount0));
       position.amount1 = BigInt(Math.floor(amount1));
+
+      position.amount0D = convertTokenToDecimal(
+        pool.amount0,
+        pool.token0Decimals
+      );
+      position.amount1D = convertTokenToDecimal(
+        pool.amount1,
+        pool.token1Decimals
+      );
 
       const ratio = getPositionRatio(
         position.amount0,

@@ -47,9 +47,11 @@ type Position @entity {
 
   " amount of token0 stored in the position "
   amount0: BigInt!
+  amount0D: Float!
 
   " amount of token1 stored in the position "
   amount1: BigInt!
+  amount1D: Float!
 
   token0Id: ID
   " currency0 address "
