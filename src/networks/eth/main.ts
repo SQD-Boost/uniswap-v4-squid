@@ -6,7 +6,7 @@ import { ProcessorContext, processor } from "./processor";
 import { TaskQueue } from "../../utils/queue";
 import { initializeBundle } from "./utils/entities/bundle";
 import {
-  BLOCK_UPDATE_ALL_POSITIONS,
+  block_intervals,
   CHAIN_TAG,
   NFT_POSITION_MANAGER,
   POOL_MANAGER,
@@ -32,6 +32,7 @@ import {
   initializePoolManager,
   sumPoolAndCountPoolManager,
 } from "./utils/entities/poolManager";
+import { updateAllPoolsTvlUSD } from "./utils/entities/pool";
 
 export type MappingContext = ProcessorContext<StoreWithCache> & {
   queue: TaskQueue;
@@ -39,6 +40,7 @@ export type MappingContext = ProcessorContext<StoreWithCache> & {
 
 let handleOnce = false;
 let hasUpdatedPositions = false;
+let lastTvlUpdateBlock = 0;
 
 processor.run(
   new TypeormDatabaseWithCache({
@@ -95,8 +97,7 @@ processor.run(
       await sumPoolAndCountPoolManager(mctx);
     });
 
-    const lastblock = mctx.blocks[mctx.blocks.length - 1].header.height;
-    if (lastblock >= BLOCK_UPDATE_ALL_POSITIONS) {
+    if (mctx.isHead) {
       mctx.queue.add(async () => {
         if (!hasUpdatedPositions) {
           await updateAllPositionsOnce(mctx);
@@ -105,7 +106,14 @@ processor.run(
           hasUpdatedPositions = true;
         }
         await updateAllPositionsSwapped(mctx);
-        // update position.coreTotalUsd missing and token.tvlUsd and pool.tvlUSD
+
+        const lastBlock = mctx.blocks[mctx.blocks.length - 1].header.height;
+
+        if (lastBlock - lastTvlUpdateBlock >= block_intervals.poolsTvlUSD) {
+          await updateAllPoolsTvlUSD(mctx);
+          lastTvlUpdateBlock = lastBlock;
+        }
+        // update position.coreTotalUsd missing and token.tvlUsd and
       });
     }
 

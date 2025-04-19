@@ -13,10 +13,8 @@ import {
   convertTokenToDecimal,
   getPricesFromSqrtPriceX96,
 } from "../helpers/global.helper";
-import {
-  BLOCK_UPDATE_ALL_POSITIONS,
-  CHAIN_ID,
-} from "../constants/network.constant";
+import { CHAIN_ID } from "../constants/network.constant";
+import { MoreThan } from "typeorm";
 
 export const createPool = (
   poolAddress: string,
@@ -90,7 +88,7 @@ export const updatePoolStates = async (
     return { volumeUSDAdded: 0, feeUSDAdded: 0 };
   }
 
-  if (log.block.height >= BLOCK_UPDATE_ALL_POSITIONS) {
+  if (mctx.isHead) {
     if (
       pool.batchBlockMaximumTick === IMPOSSIBLE_TICK &&
       pool.batchBlockMinimumTick === IMPOSSIBLE_TICK
@@ -192,3 +190,57 @@ export const updatePoolStates = async (
     feeUSDAdded,
   };
 };
+
+export async function updateAllPoolsTvlUSD(
+  mctx: MappingContext,
+  batchSize: number = 100
+) {
+  let skip = 0;
+
+  console.time("updateAllPoolsTvlUSD");
+
+  while (true) {
+    const pools = await mctx.store.find(Pool, {
+      where: {
+        chainId: CHAIN_ID,
+        liquidity: MoreThan(ZERO_BI),
+      },
+      skip: skip,
+      take: batchSize,
+    });
+
+    if (pools.length === 0) {
+      break;
+    }
+
+    const tokenIds = new Set<string>();
+    pools.forEach((pool) => {
+      tokenIds.add(pool.token0Id);
+      tokenIds.add(pool.token1Id);
+    });
+
+    const tokens = await Promise.all(
+      Array.from(tokenIds).map((id) => mctx.store.get(Token, id))
+    );
+
+    const tokenPriceMap = new Map<string, number>();
+    tokens.forEach((token) => {
+      if (token) {
+        tokenPriceMap.set(token.id, token.price);
+      }
+    });
+
+    for (const pool of pools) {
+      const token0Price = tokenPriceMap.get(pool.token0Id) || 0;
+      const token1Price = tokenPriceMap.get(pool.token1Id) || 0;
+
+      pool.tvlUSD = pool.amount0D * token0Price + pool.amount1D * token1Price;
+
+      await mctx.store.save(pool);
+    }
+
+    skip += batchSize;
+  }
+
+  console.timeEnd("updateAllPoolsTvlUSD");
+}

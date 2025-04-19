@@ -21,8 +21,6 @@ export const RPC_URL = process.env.RPC_ETH_HTTP;
 export const GATEWAY_SQD_URL =
   "https://v2.archive.subsquid.io/network/ethereum-mainnet";
 
-export const BLOCK_UPDATE_ALL_POSITIONS = 22100519;
-
 const USDC_ADDRESS = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
 const USDC_DECIMALS = 6;
 const USDT_ADDRESS = "0xdac17f958d2ee523a2206206994597c13d831ec7";
@@ -56,4 +54,8 @@ export const permissionReccordTx = {
   pooldaydata: false,
   tokenhourdata: false,
   tokendaydata: false,
+};
+
+export const block_intervals = {
+  poolsTvlUSD: 10,
 };
