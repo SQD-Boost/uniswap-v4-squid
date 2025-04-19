@@ -17,6 +17,8 @@ export const initializePoolManager = async (
       id: poolManagerId,
       poolCount: 0,
       swapCount: ZERO_BI,
+      totalVolumeUSD: 0,
+      totalFeesUSD: 0,
       poolManagerAddress: POOL_MANAGER,
       chainId: CHAIN_ID,
     });
@@ -47,6 +49,19 @@ export const sumPoolAndCountPoolManager = async (mctx: MappingContext) => {
 
   poolManager.poolCount += poolCount;
   poolManager.swapCount += BigInt(swapCount);
+
+  await mctx.store.upsert(poolManager);
+};
+
+export const addFeeVolumePoolManager = async (
+  mctx: MappingContext,
+  volumeUSDAdded: number,
+  feeUSDAdded: number
+) => {
+  let poolManager = await mctx.store.getOrFail(PoolManager, getPoolManagerId());
+
+  poolManager.totalVolumeUSD += volumeUSDAdded;
+  poolManager.totalFeesUSD += feeUSDAdded;
 
   await mctx.store.upsert(poolManager);
 };

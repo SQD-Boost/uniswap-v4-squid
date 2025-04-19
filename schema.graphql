@@ -3,6 +3,12 @@ type PoolManager @entity {
   poolCount: Int!
   swapCount: BigInt!
 
+  # total volume all time in derived USD
+  totalVolumeUSD: Float!
+
+  # total swap fees all time in USD
+  totalFeesUSD: Float!
+
   poolManagerAddress: String!
   chainId: Int!
 }

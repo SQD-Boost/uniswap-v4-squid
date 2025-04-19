@@ -82,12 +82,12 @@ export const updatePoolStates = async (
   amount0: bigint,
   amount1: bigint,
   fee: number
-) => {
+): Promise<{ volumeUSDAdded: number; feeUSDAdded: number }> => {
   let poolId = getPoolId(id);
   let pool = await mctx.store.get(Pool, poolId);
   if (!pool) {
     console.log(`updatePoolStates : Pool ${poolId} not found`);
-    return;
+    return { volumeUSDAdded: 0, feeUSDAdded: 0 };
   }
 
   if (log.block.height >= BLOCK_UPDATE_ALL_POSITIONS) {
@@ -124,6 +124,9 @@ export const updatePoolStates = async (
   let fee0 = ZERO_BI;
   let fee1 = ZERO_BI;
 
+  let volume0USD = 0;
+  let volume1USD = 0;
+
   let fee0USD = 0;
   let fee1USD = 0;
 
@@ -136,7 +139,7 @@ export const updatePoolStates = async (
       pool.volumeToken0,
       pool.token0Decimals
     );
-    pool.volumeUSD +=
+    volume0USD =
       convertTokenToDecimal(swappedAmount0, pool.token0Decimals) * token0.price;
 
     fee0USD = convertTokenToDecimal(fee0, pool.token0Decimals) * token0.price;
@@ -149,7 +152,7 @@ export const updatePoolStates = async (
       pool.volumeToken1,
       pool.token1Decimals
     );
-    pool.volumeUSD +=
+    volume1USD =
       convertTokenToDecimal(swappedAmount1, pool.token1Decimals) * token1.price;
 
     fee1USD = convertTokenToDecimal(fee1, pool.token1Decimals) * token1.price;
@@ -158,7 +161,11 @@ export const updatePoolStates = async (
   pool.collectedFeesToken0 += fee0;
   pool.collectedFeesToken1 += fee1;
 
-  pool.collectedFeesUSD = fee0USD + fee1USD;
+  const volumeUSDAdded = volume0USD + volume1USD;
+  const feeUSDAdded = fee0USD + fee1USD;
+
+  pool.volumeUSD = volumeUSDAdded;
+  pool.collectedFeesUSD = feeUSDAdded;
 
   pool.amount0 = pool.amount0 + swappedAmount0;
   pool.amount1 = pool.amount1 + swappedAmount1;
@@ -179,4 +186,9 @@ export const updatePoolStates = async (
   pool.timestamp = BigInt(log.block.timestamp);
 
   await mctx.store.upsert(pool);
+
+  return {
+    volumeUSDAdded,
+    feeUSDAdded,
+  };
 };

@@ -11,6 +11,7 @@ import {
   Pool,
   PoolDayData,
   PoolHourData,
+  PoolManager,
   Token,
   Wallet,
 } from "../../../model";
@@ -19,6 +20,7 @@ import {
   getPoolDayDataId,
   getPoolHourDataId,
   getPoolId,
+  getPoolManagerId,
   getTokenId,
   getWalletId,
 } from "../utils/helpers/ids.helper";
@@ -46,6 +48,7 @@ import {
   incrementTokensHourDataSwapCount,
   updateTokenHourData,
 } from "../utils/entities/tokenHourData";
+import { addFeeVolumePoolManager } from "../utils/entities/poolManager";
 
 export const handleInitialize = (mctx: MappingContext, log: Log) => {
   let {
@@ -165,6 +168,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
   mctx.store.defer(PoolDayData, getPoolDayDataId(id, log.block.timestamp));
   mctx.store.defer(PoolHourData, getPoolHourDataId(id, log.block.timestamp));
   mctx.store.defer(Wallet, getWalletId(sender));
+  mctx.store.defer(PoolManager, getPoolManagerId());
 
   mctx.queue.add(async () => {
     await incrementTokensSwapCount(mctx, log, id);
@@ -174,7 +178,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
     if (permissionReccordTx.tokenhourdata) {
       await incrementTokensHourDataSwapCount(mctx, log, id);
     }
-    await updatePoolStates(
+    const { volumeUSDAdded, feeUSDAdded } = await updatePoolStates(
       mctx,
       log,
       id,
@@ -185,6 +189,8 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       amount1,
       fee
     );
+
+    await addFeeVolumePoolManager(mctx, volumeUSDAdded, feeUSDAdded);
     if (permissionReccordTx.pooldaydata) {
       await updatePoolDayData(
         mctx,
