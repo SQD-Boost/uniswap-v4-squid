@@ -5,7 +5,7 @@ import {
   MoreThanOrEqual,
   Not,
 } from "typeorm";
-import { Pool, Position } from "../../../../model";
+import { Pool, Position, Token } from "../../../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { IMPOSSIBLE_TICK, ZERO_BI } from "../constants/global.contant";
@@ -318,3 +318,65 @@ export const updateAllPositionsSwapped = async (mctx: MappingContext) => {
 
   await mctx.store.upsert(pools);
 };
+
+export async function updateAllPositionsCoreTotalUSD(
+  mctx: MappingContext,
+  batchSize: number = 100
+): Promise<number> {
+  let processed = 0;
+  let skip = 0;
+
+  console.time("updateAllPositionsCoreTotalUSD");
+
+  while (true) {
+    const positions = await mctx.store.find(Position, {
+      where: {
+        chainId: CHAIN_ID,
+        liquidity: MoreThan(ZERO_BI),
+      },
+      skip: skip,
+      take: batchSize,
+    });
+
+    if (positions.length === 0) {
+      break;
+    }
+
+    const tokenIds = new Set<string>();
+    positions.forEach((position) => {
+      if (position.token0Id) tokenIds.add(position.token0Id);
+      if (position.token1Id) tokenIds.add(position.token1Id);
+    });
+
+    const tokens = await Promise.all(
+      Array.from(tokenIds).map((id) => mctx.store.get(Token, id))
+    );
+
+    const tokenPriceMap = new Map<string, number>();
+    tokens.forEach((token) => {
+      if (token) {
+        tokenPriceMap.set(token.id, token.price);
+      }
+    });
+
+    for (const position of positions) {
+      if (!position.token0Id || !position.token1Id) {
+        continue;
+      }
+
+      const token0Price = tokenPriceMap.get(position.token0Id) || 0;
+      const token1Price = tokenPriceMap.get(position.token1Id) || 0;
+
+      position.coreTotalUSD =
+        position.amount0D * token0Price + position.amount1D * token1Price;
+
+      await mctx.store.save(position);
+    }
+
+    processed += positions.length;
+    skip += batchSize;
+  }
+
+  console.timeEnd("updateAllPositionsCoreTotalUSD");
+  return processed;
+}

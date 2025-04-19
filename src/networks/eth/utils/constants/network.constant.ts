@@ -58,4 +58,5 @@ export const permissionReccordTx = {
 
 export const block_intervals = {
   poolsTvlUSD: 10,
+  coreTotalUSD: 15,
 };

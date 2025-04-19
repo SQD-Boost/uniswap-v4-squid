@@ -23,6 +23,7 @@ import {
 } from "./mappings/poolManager";
 import { createNativeToken, initializeTokens } from "./utils/entities/token";
 import {
+  updateAllPositionsCoreTotalUSD,
   updateAllPositionsOnce,
   updateAllPositionsSwapped,
 } from "./utils/entities/position";
@@ -41,6 +42,7 @@ export type MappingContext = ProcessorContext<StoreWithCache> & {
 let handleOnce = false;
 let hasUpdatedPositions = false;
 let lastTvlUpdateBlock = 0;
+let coreTotalUSDUpdateBlock = 0;
 
 processor.run(
   new TypeormDatabaseWithCache({
@@ -112,6 +114,13 @@ processor.run(
         if (lastBlock - lastTvlUpdateBlock >= block_intervals.poolsTvlUSD) {
           await updateAllPoolsTvlUSD(mctx);
           lastTvlUpdateBlock = lastBlock;
+        }
+        if (
+          lastBlock - coreTotalUSDUpdateBlock >=
+          block_intervals.coreTotalUSD
+        ) {
+          await updateAllPositionsCoreTotalUSD(mctx);
+          coreTotalUSDUpdateBlock = lastBlock;
         }
         // update position.coreTotalUsd missing and token.tvlUsd and
       });
