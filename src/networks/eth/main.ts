@@ -122,7 +122,7 @@ processor.run(
           await updateAllPositionsCoreTotalUSD(mctx);
           coreTotalUSDUpdateBlock = lastBlock;
         }
-        // update position.coreTotalUsd missing and token.tvlUsd and
+        // update  token.tvlUsd missing
       });
     }
 

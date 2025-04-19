@@ -200,7 +200,8 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
         sqrtPriceX96,
         tick,
         amount0,
-        amount1
+        amount1,
+        fee
       );
     }
     if (permissionReccordTx.poolhourdata) {
@@ -212,7 +213,8 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
         sqrtPriceX96,
         tick,
         amount0,
-        amount1
+        amount1,
+        fee
       );
     }
 

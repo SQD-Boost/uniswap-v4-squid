@@ -249,6 +249,12 @@ type PoolDayData @entity {
   # volume in USD
   volumeUSD: Float!
 
+  collectedFeesToken0: BigInt!
+  collectedFeesToken1: BigInt!
+
+  # all time fees collected derived USD
+  collectedFeesUSD: Float!
+
   swapCount: BigInt!
 
   # opening price of token0
@@ -290,6 +296,12 @@ type PoolHourData @entity {
 
   # volume in USD
   volumeUSD: Float!
+
+  collectedFeesToken0: BigInt!
+  collectedFeesToken1: BigInt!
+
+  # all time fees collected derived USD
+  collectedFeesUSD: Float!
 
   swapCount: BigInt!
 
