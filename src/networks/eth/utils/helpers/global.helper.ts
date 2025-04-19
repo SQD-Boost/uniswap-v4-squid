@@ -57,42 +57,6 @@ const getPriceFromTick = (tick: number) => {
   return 1.0001 ** tick;
 };
 
-export function getAmounts(
-  liquidity: number,
-  sp: number,
-  tl: number,
-  tu: number
-) {
-  const pl = getPriceFromTick(tl);
-  const pu = getPriceFromTick(tu);
-  const spl = Math.sqrt(pl);
-  const spu = Math.sqrt(pu);
-  const q = 2 ** 96;
-
-  const spp = sp / q;
-
-  if (spp > spl && spp < spu) {
-    const amount0 = liquidity * ((spu - spp) / (spp * spu));
-
-    const amount1 = liquidity * (spp - spl);
-
-    return {
-      amount0: amount0,
-      amount1: amount1,
-    };
-  }
-
-  if (spp < spl) {
-    const amount0 = liquidity * ((spu - spl) / (spu * spl));
-    return { amount0: amount0, amount1: 0 };
-  }
-  if (spp > spu) {
-    const amount1 = liquidity * (spu - spl);
-    return { amount0: 0, amount1: amount1 };
-  }
-  return { amount0: 0, amount1: 0 };
-}
-
 export const convertTokenToDecimal = (
   weiBalanceBigInt: bigint,
   decimals: number

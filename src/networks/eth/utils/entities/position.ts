@@ -14,7 +14,6 @@ import {
   convertTokenToDecimal,
   getAmount0,
   getAmount1,
-  getAmounts,
 } from "../helpers/global.helper";
 import { getManagerId, getPoolId, getPositionId } from "../helpers/ids.helper";
 
@@ -82,8 +81,8 @@ export const updatePositionAndPool = async (
       pool.sqrtPriceX96
     );
 
-    pool.amount0 = pool.amount0 + BigInt(amount0Raw);
-    pool.amount1 = pool.amount1 + BigInt(amount1Raw);
+    pool.amount0 = pool.amount0 + amount0Raw;
+    pool.amount1 = pool.amount1 + amount1Raw;
 
     pool.amount0D = convertTokenToDecimal(pool.amount0, pool.token0Decimals);
     pool.amount1D = convertTokenToDecimal(pool.amount1, pool.token1Decimals);
@@ -109,15 +108,23 @@ export const updatePositionAndPool = async (
   position.upperTick = tickUpper;
 
   if (pool) {
-    const { amount0, amount1 } = getAmounts(
-      Number(position.liquidity),
-      Number(pool.sqrtPriceX96),
+    const amount0Raw = getAmount0(
       tickLower,
-      tickUpper
+      tickUpper,
+      pool.currentTick,
+      position.liquidity,
+      pool.sqrtPriceX96
+    );
+    const amount1Raw = getAmount1(
+      tickLower,
+      tickUpper,
+      pool.currentTick,
+      position.liquidity,
+      pool.sqrtPriceX96
     );
 
-    position.amount0 = BigInt(Math.floor(amount0));
-    position.amount1 = BigInt(Math.floor(amount1));
+    position.amount0 = amount0Raw;
+    position.amount1 = amount1Raw;
 
     position.amount0D = convertTokenToDecimal(
       pool.amount0,
@@ -181,15 +188,24 @@ export const updateAllPositionsOnce = async (mctx: MappingContext) => {
 
     for (let i = 0; i < positions.length; i++) {
       const position = positions[i];
-      const { amount0, amount1 } = getAmounts(
-        Number(position.liquidity),
-        Number(pool.sqrtPriceX96),
+
+      const amount0Raw = getAmount0(
         position.lowerTick,
-        position.upperTick
+        position.upperTick,
+        pool.currentTick,
+        position.liquidity,
+        pool.sqrtPriceX96
+      );
+      const amount1Raw = getAmount1(
+        position.lowerTick,
+        position.upperTick,
+        pool.currentTick,
+        position.liquidity,
+        pool.sqrtPriceX96
       );
 
-      position.amount0 = BigInt(Math.floor(amount0));
-      position.amount1 = BigInt(Math.floor(amount1));
+      position.amount0 = amount0Raw;
+      position.amount1 = amount1Raw;
 
       position.amount0D = convertTokenToDecimal(
         pool.amount0,
@@ -257,15 +273,24 @@ export const updateAllPositionsSwapped = async (mctx: MappingContext) => {
 
     for (let i = 0; i < positions.length; i++) {
       const position = positions[i];
-      const { amount0, amount1 } = getAmounts(
-        Number(position.liquidity),
-        Number(pool.sqrtPriceX96),
+
+      const amount0Raw = getAmount0(
         position.lowerTick,
-        position.upperTick
+        position.upperTick,
+        pool.currentTick,
+        position.liquidity,
+        pool.sqrtPriceX96
+      );
+      const amount1Raw = getAmount1(
+        position.lowerTick,
+        position.upperTick,
+        pool.currentTick,
+        position.liquidity,
+        pool.sqrtPriceX96
       );
 
-      position.amount0 = BigInt(Math.floor(amount0));
-      position.amount1 = BigInt(Math.floor(amount1));
+      position.amount0 = amount0Raw;
+      position.amount1 = amount1Raw;
 
       position.amount0D = convertTokenToDecimal(
         pool.amount0,
