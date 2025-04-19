@@ -132,8 +132,8 @@ export const updatePoolHourData = async (
   const volumeUSDAdded = volume0USD + volume1USD;
   const feeUSDAdded = fee0USD + fee1USD;
 
-  poolHourData.volumeUSD = volumeUSDAdded;
-  poolHourData.collectedFeesUSD = feeUSDAdded;
+  poolHourData.volumeUSD += volumeUSDAdded;
+  poolHourData.collectedFeesUSD += feeUSDAdded;
 
   await mctx.store.upsert(poolHourData);
 };

@@ -162,8 +162,8 @@ export const updatePoolStates = async (
   const volumeUSDAdded = volume0USD + volume1USD;
   const feeUSDAdded = fee0USD + fee1USD;
 
-  pool.volumeUSD = volumeUSDAdded;
-  pool.collectedFeesUSD = feeUSDAdded;
+  pool.volumeUSD += volumeUSDAdded;
+  pool.collectedFeesUSD += feeUSDAdded;
 
   pool.amount0 = pool.amount0 + swappedAmount0;
   pool.amount1 = pool.amount1 + swappedAmount1;

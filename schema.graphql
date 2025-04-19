@@ -206,7 +206,6 @@ type Pool @entity {
   # block pool was created at
   createdAtBlockNumber: BigInt!
 
-  # ticks: [Tick!]! @derivedFrom(field: "pool")
   positions: [Position!]! @derivedFrom(field: "pool")
   poolDayDatas: [PoolDayData!]! @derivedFrom(field: "pool")
   poolHourDatas: [PoolHourData!]! @derivedFrom(field: "pool")
