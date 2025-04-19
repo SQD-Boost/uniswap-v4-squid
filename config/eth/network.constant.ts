@@ -52,4 +52,8 @@ export const permissionReccordTx = {
   modifyLiquidity: false,
   swap: false,
   donate: false,
+  poolhourdata: false,
+  pooldaydata: false,
+  tokenhourdata: false,
+  tokendaydata: false,
 };

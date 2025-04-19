@@ -168,8 +168,12 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
 
   mctx.queue.add(async () => {
     await incrementTokensSwapCount(mctx, log, id);
-    await incrementTokensDayDataSwapCount(mctx, log, id);
-    await incrementTokensHourDataSwapCount(mctx, log, id);
+    if (permissionReccordTx.tokendaydata) {
+      await incrementTokensDayDataSwapCount(mctx, log, id);
+    }
+    if (permissionReccordTx.tokenhourdata) {
+      await incrementTokensHourDataSwapCount(mctx, log, id);
+    }
     await updatePoolStates(
       mctx,
       log,
@@ -181,33 +185,42 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       amount1,
       fee
     );
-    await updatePoolDayData(
-      mctx,
-      log,
-      id,
-      liquidity,
-      sqrtPriceX96,
-      tick,
-      amount0,
-      amount1
-    );
-    await updatePoolHourData(
-      mctx,
-      log,
-      id,
-      liquidity,
-      sqrtPriceX96,
-      tick,
-      amount0,
-      amount1
-    );
+    if (permissionReccordTx.pooldaydata) {
+      await updatePoolDayData(
+        mctx,
+        log,
+        id,
+        liquidity,
+        sqrtPriceX96,
+        tick,
+        amount0,
+        amount1
+      );
+    }
+    if (permissionReccordTx.poolhourdata) {
+      await updatePoolHourData(
+        mctx,
+        log,
+        id,
+        liquidity,
+        sqrtPriceX96,
+        tick,
+        amount0,
+        amount1
+      );
+    }
+
     if (id === BUNDLE_SOURCE_POOL_ID) {
       await updateBundlePrice(mctx);
     }
     const priceUpdate = await updateTokenPrice(mctx, id);
     if (priceUpdate) {
-      await updateTokenDayData(mctx, log, priceUpdate);
-      await updateTokenHourData(mctx, log, priceUpdate);
+      if (permissionReccordTx.tokendaydata) {
+        await updateTokenDayData(mctx, log, priceUpdate);
+      }
+      if (permissionReccordTx.tokendaydata) {
+        await updateTokenHourData(mctx, log, priceUpdate);
+      }
     }
 
     const walletId = getWalletId(sender);
