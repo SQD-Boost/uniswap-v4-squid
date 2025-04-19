@@ -88,6 +88,10 @@ export const updatePositionAndPool = async (
     pool.amount0D = convertTokenToDecimal(pool.amount0, pool.token0Decimals);
     pool.amount1D = convertTokenToDecimal(pool.amount1, pool.token1Decimals);
 
+    if (pool.liquidity === ZERO_BI) {
+      pool.tvlUSD = 0;
+    }
+
     await mctx.store.upsert(pool);
   }
 
