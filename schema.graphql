@@ -248,6 +248,9 @@ type PoolDayData @entity {
   # volume in USD
   volumeUSD: Float!
 
+  # percentage change in volume USD compared to previous day
+  volumePercentageChange: Float!
+
   collectedFeesToken0: BigInt!
   collectedFeesToken1: BigInt!
 

@@ -4,6 +4,7 @@ export const ZERO_BI = BigInt(0);
 export const MINUS_ONE_BI = BigInt(-1);
 export const BASE_FEE = BigInt(1000000);
 export const IMPOSSIBLE_TICK = 887273;
+export const DAY_SECONDS_MILI = 86400 * 1000;
 
 export const MIN_TICK: number = -887272;
 export const MAX_TICK: number = -MIN_TICK;

@@ -3,6 +3,7 @@ import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {
   BASE_FEE,
+  DAY_SECONDS_MILI,
   MINUS_ONE_BI,
   ONE_BI,
   ZERO_BI,
@@ -36,6 +37,7 @@ export const createPoolDayData = (
     volumeToken1: ZERO_BI,
     volumeToken1D: 0,
     volumeUSD: 0,
+    volumePercentageChange: 0,
     collectedFeesToken0: ZERO_BI,
     collectedFeesToken1: ZERO_BI,
     collectedFeesUSD: 0,
@@ -46,6 +48,33 @@ export const createPoolDayData = (
     close: token0Price,
     chainId: CHAIN_ID,
   });
+};
+
+export const updatePreviousDayVolumePercentageChange = async (
+  mctx: MappingContext,
+  id: string,
+  timestamp: number
+) => {
+  const previousDayTimestamp = timestamp - DAY_SECONDS_MILI;
+  const previousDayDataId = getPoolDayDataId(id, previousDayTimestamp);
+  const previousDayData = await mctx.store.get(PoolDayData, previousDayDataId);
+
+  if (previousDayData) {
+    const twoDaysAgoTimestamp = timestamp - 3 * DAY_SECONDS_MILI;
+    const twoDaysAgoDataId = getPoolDayDataId(id, twoDaysAgoTimestamp);
+
+    const twoDaysAgoData = await mctx.store.get(PoolDayData, twoDaysAgoDataId);
+
+    if (twoDaysAgoData && twoDaysAgoData.volumeUSD > 0) {
+      const previousDayPercentageChange =
+        (previousDayData.volumeUSD - twoDaysAgoData.volumeUSD) /
+        twoDaysAgoData.volumeUSD;
+
+      previousDayData.volumePercentageChange = previousDayPercentageChange;
+
+      await mctx.store.upsert(previousDayData);
+    }
+  }
 };
 
 export const updatePoolDayData = async (
@@ -77,7 +106,14 @@ export const updatePoolDayData = async (
       log.block.timestamp,
       token0Price
     );
+
+    await updatePreviousDayVolumePercentageChange(
+      mctx,
+      id,
+      log.block.timestamp
+    );
   }
+
   poolDayData.swapCount += ONE_BI;
   poolDayData.liquidity = liquidity;
   poolDayData.sqrtPrice = sqrtPriceX96;
