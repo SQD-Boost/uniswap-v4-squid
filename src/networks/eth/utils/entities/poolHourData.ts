@@ -36,6 +36,7 @@ export const createPoolHourData = (
     volumeToken1: ZERO_BI,
     volumeToken1D: 0,
     volumeUSD: 0,
+    volumePercentageChange: 0,
     collectedFeesToken0: ZERO_BI,
     collectedFeesToken1: ZERO_BI,
     collectedFeesUSD: 0,
@@ -46,6 +47,38 @@ export const createPoolHourData = (
     close: token0Price,
     chainId: CHAIN_ID,
   });
+};
+
+export const updatePreviousHourVolumePercentageChange = async (
+  mctx: MappingContext,
+  id: string,
+  timestamp: number
+) => {
+  const previousHourTimestamp = timestamp - HOUR_MS;
+  const previousHourDataId = getPoolHourDataId(id, previousHourTimestamp);
+  const previousHourData = await mctx.store.get(
+    PoolHourData,
+    previousHourDataId
+  );
+
+  if (previousHourData) {
+    const twoHoursAgoTimestamp = timestamp - 2 * HOUR_MS;
+    const twoHoursAgoDataId = getPoolHourDataId(id, twoHoursAgoTimestamp);
+    const twoHoursAgoData = await mctx.store.get(
+      PoolHourData,
+      twoHoursAgoDataId
+    );
+
+    if (twoHoursAgoData && twoHoursAgoData.volumeUSD > 0) {
+      const previousHourPercentageChange =
+        (previousHourData.volumeUSD - twoHoursAgoData.volumeUSD) /
+        twoHoursAgoData.volumeUSD;
+
+      previousHourData.volumePercentageChange = previousHourPercentageChange;
+
+      await mctx.store.upsert(previousHourData);
+    }
+  }
 };
 
 export const updatePoolHourData = async (
@@ -77,7 +110,14 @@ export const updatePoolHourData = async (
       log.block.timestamp,
       token0Price
     );
+
+    await updatePreviousHourVolumePercentageChange(
+      mctx,
+      id,
+      log.block.timestamp
+    );
   }
+
   poolHourData.swapCount += ONE_BI;
   poolHourData.liquidity = liquidity;
   poolHourData.sqrtPrice = sqrtPriceX96;

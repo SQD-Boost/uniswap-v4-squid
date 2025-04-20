@@ -299,6 +299,9 @@ type PoolHourData @entity {
   # volume in USD
   volumeUSD: Float!
 
+  # percentage change in volume USD compared to previous hour
+  volumePercentageChange: Float!
+
   collectedFeesToken0: BigInt!
   collectedFeesToken1: BigInt!
 
