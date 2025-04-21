@@ -47,11 +47,11 @@ type Position @entity {
 
   " amount of token0 stored in the position "
   amount0: BigInt!
-  amount0D: Float!
+  amount0D: String!
 
   " amount of token1 stored in the position "
   amount1: BigInt!
-  amount1D: Float!
+  amount1D: String!
 
   token0Id: ID
   " currency0 address "
@@ -145,11 +145,11 @@ type Pool @entity {
 
   " amount of token0 stored in the pool "
   amount0: BigInt!
-  amount0D: Float!
+  amount0D: String!
 
   " amount of token1 stored in the pool "
   amount1: BigInt!
-  amount1D: Float!
+  amount1D: String!
 
   " relative price of token0"
   price0: Float!
@@ -172,10 +172,10 @@ type Pool @entity {
   liquidity: BigInt!
 
   volumeToken0: BigInt!
-  volumeToken0D: Float!
+  volumeToken0D: String!
 
   volumeToken1: BigInt!
-  volumeToken1D: Float!
+  volumeToken1D: String!
 
   volumeUSD: Float!
 
@@ -240,10 +240,10 @@ type PoolDayData @entity {
 
   # volume in token0
   volumeToken0: BigInt!
-  volumeToken0D: Float!
+  volumeToken0D: String!
   # volume in token1
   volumeToken1: BigInt!
-  volumeToken1D: Float!
+  volumeToken1D: String!
 
   # volume in USD
   volumeUSD: Float!
@@ -291,10 +291,11 @@ type PoolHourData @entity {
   # volume in token0
   volumeToken0: BigInt!
   # volume in token0 decimal
-  volumeToken0D: Float!
+  volumeToken0D: String!
   # volume in token1
   volumeToken1: BigInt!
-  volumeToken1D: Float!
+  # volume in token1 decimal
+  volumeToken1D: String!
 
   # volume in USD
   volumeUSD: Float!

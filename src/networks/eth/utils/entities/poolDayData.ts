@@ -7,6 +7,7 @@ import {
   MINUS_ONE_BI,
   ONE_BI,
   ZERO_BI,
+  ZERO_STRING,
 } from "../constants/global.contant";
 import { CHAIN_ID } from "../constants/network.constant";
 import {
@@ -33,9 +34,9 @@ export const createPoolDayData = (
     sqrtPrice: ZERO_BI,
     tick: 0,
     volumeToken0: ZERO_BI,
-    volumeToken0D: 0,
+    volumeToken0D: ZERO_STRING,
     volumeToken1: ZERO_BI,
-    volumeToken1D: 0,
+    volumeToken1D: ZERO_STRING,
     volumeUSD: 0,
     volumePercentageChange: 0,
     collectedFeesToken0: ZERO_BI,
@@ -146,9 +147,11 @@ export const updatePoolDayData = async (
       pool.token0Decimals
     );
     volume0USD =
-      convertTokenToDecimal(swappedAmount0, pool.token0Decimals) * token0.price;
+      Number(convertTokenToDecimal(swappedAmount0, pool.token0Decimals)) *
+      token0.price;
 
-    fee0USD = convertTokenToDecimal(fee0, pool.token0Decimals) * token0.price;
+    fee0USD =
+      Number(convertTokenToDecimal(fee0, pool.token0Decimals)) * token0.price;
   } else if (swappedAmount1 > ZERO_BI) {
     const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
 
@@ -159,9 +162,11 @@ export const updatePoolDayData = async (
       pool.token1Decimals
     );
     volume1USD =
-      convertTokenToDecimal(swappedAmount1, pool.token1Decimals) * token1.price;
+      Number(convertTokenToDecimal(swappedAmount1, pool.token1Decimals)) *
+      token1.price;
 
-    fee1USD = convertTokenToDecimal(fee1, pool.token1Decimals) * token1.price;
+    fee1USD =
+      Number(convertTokenToDecimal(fee1, pool.token1Decimals)) * token1.price;
   }
 
   poolDayData.collectedFeesToken0 += fee0;

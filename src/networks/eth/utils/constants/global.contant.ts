@@ -14,3 +14,4 @@ export const MaxUint256: bigint = BigInt(
 
 export const ONE_BI: bigint = 1n;
 export const Q96: bigint = 1n << 96n;
+export const ZERO_STRING = "0";

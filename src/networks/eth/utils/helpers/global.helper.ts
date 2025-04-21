@@ -53,14 +53,10 @@ export function getPricesFromSqrtPriceX96(
   };
 }
 
-const getPriceFromTick = (tick: number) => {
-  return 1.0001 ** tick;
-};
-
 export const convertTokenToDecimal = (
   weiBalanceBigInt: bigint,
   decimals: number
-) => {
+): string => {
   let weiBalanceStr = weiBalanceBigInt.toString();
   weiBalanceStr = weiBalanceStr.padStart(decimals + 1, "0");
 
@@ -72,7 +68,7 @@ export const convertTokenToDecimal = (
 
   const trimmedEtherStr = etherStr.replace(/\.?0+$/, "");
 
-  return Number(trimmedEtherStr);
+  return trimmedEtherStr;
 };
 
 export const getAllTokensInBaseAmount = (
@@ -90,16 +86,16 @@ export const getAllTokensInBaseAmount = (
 
   if (isToken0Base) {
     const amount1InBase =
-      convertTokenToDecimal(amount1, token1Decimals) * price0;
+      Number(convertTokenToDecimal(amount1, token1Decimals)) * price0;
 
-    const amount0Base = convertTokenToDecimal(amount0, token0Decimals);
+    const amount0Base = Number(convertTokenToDecimal(amount0, token0Decimals));
 
     return (amount1InBase + amount0Base) / 2;
   } else {
     const amount0InBase =
-      convertTokenToDecimal(amount0, token0Decimals) * price1;
+      Number(convertTokenToDecimal(amount0, token0Decimals)) * price1;
 
-    const amount1Base = convertTokenToDecimal(amount1, token1Decimals);
+    const amount1Base = Number(convertTokenToDecimal(amount1, token1Decimals));
 
     return (amount0InBase + amount1Base) / 2;
   }

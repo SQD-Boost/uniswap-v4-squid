@@ -8,7 +8,11 @@ import {
 import { Pool, Position, Token } from "../../../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
-import { IMPOSSIBLE_TICK, ZERO_BI } from "../constants/global.contant";
+import {
+  IMPOSSIBLE_TICK,
+  ZERO_BI,
+  ZERO_STRING,
+} from "../constants/global.contant";
 import { CHAIN_ID, NFT_POSITION_MANAGER } from "../constants/network.constant";
 import {
   convertTokenToDecimal,
@@ -27,9 +31,9 @@ export const createPositionUpdateOwner = (log: Log, nftId: bigint) => {
     upperTick: 0,
     liquidity: ZERO_BI,
     amount0: ZERO_BI,
-    amount0D: 0,
+    amount0D: ZERO_STRING,
     amount1: ZERO_BI,
-    amount1D: 0,
+    amount1D: ZERO_STRING,
     coreTotalUSD: 0,
     managerId: getManagerId(log.address),
     chainId: CHAIN_ID,
@@ -368,7 +372,8 @@ export async function updateAllPositionsCoreTotalUSD(
       const token1Price = tokenPriceMap.get(position.token1Id) || 0;
 
       position.coreTotalUSD =
-        position.amount0D * token0Price + position.amount1D * token1Price;
+        Number(position.amount0D) * token0Price +
+        Number(position.amount1D) * token1Price;
 
       await mctx.store.save(position);
     }
