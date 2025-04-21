@@ -127,11 +127,11 @@ export const updatePositionAndPool = async (
     position.amount1 = amount1Raw;
 
     position.amount0D = convertTokenToDecimal(
-      pool.amount0,
+      position.amount0,
       pool.token0Decimals
     );
     position.amount1D = convertTokenToDecimal(
-      pool.amount1,
+      position.amount1,
       pool.token1Decimals
     );
 
@@ -208,11 +208,11 @@ export const updateAllPositionsOnce = async (mctx: MappingContext) => {
       position.amount1 = amount1Raw;
 
       position.amount0D = convertTokenToDecimal(
-        pool.amount0,
+        position.amount0,
         pool.token0Decimals
       );
       position.amount1D = convertTokenToDecimal(
-        pool.amount1,
+        position.amount1,
         pool.token1Decimals
       );
 
@@ -293,11 +293,11 @@ export const updateAllPositionsSwapped = async (mctx: MappingContext) => {
       position.amount1 = amount1Raw;
 
       position.amount0D = convertTokenToDecimal(
-        pool.amount0,
+        position.amount0,
         pool.token0Decimals
       );
       position.amount1D = convertTokenToDecimal(
-        pool.amount1,
+        position.amount1,
         pool.token1Decimals
       );
 
