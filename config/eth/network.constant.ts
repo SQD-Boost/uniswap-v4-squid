@@ -56,4 +56,7 @@ export const permissionReccordTx = {
   tokendaydata: false,
 };
 
-export const BLOCK_TRIGERED = {};
+export const block_intervals = {
+  poolsTvlUSD: 10,
+  coreTotalUSD: 15,
+};
