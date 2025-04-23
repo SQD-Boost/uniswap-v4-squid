@@ -15,6 +15,10 @@ deploy:
       cmd:
         - sqd
         - process:prod:base
+    - name: uni-processor
+      cmd:
+        - sqd
+        - process:prod:uni
   api:
     cmd:
       - sqd

@@ -206,6 +206,40 @@
         "lib/networks/base/main.js"
       ],
       "hidden": true
+    },
+    "get-tokens:uni": {
+      "description": "Updates assets/pools.json with the most recent list of pools for uni",
+      "deps": [
+        "build"
+      ],
+      "cmd": [
+        "node",
+        "--require=dotenv/config",
+        "lib/networks/uni/tools/tokensRetriever.js"
+      ]
+    },
+    "process:uni": {
+      "description": "Load .env and start the squid processor for uni",
+      "deps": [
+        "build",
+        "migration:apply"
+      ],
+      "cmd": [
+        "node",
+        "--require=dotenv/config",
+        "lib/networks/uni/main.js"
+      ]
+    },
+    "process:prod:uni": {
+      "description": "Start the squid processor for uni",
+      "deps": [
+        "migration:apply"
+      ],
+      "cmd": [
+        "node",
+        "lib/networks/uni/main.js"
+      ],
+      "hidden": true
     }
   }
 }
