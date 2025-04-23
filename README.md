@@ -46,10 +46,12 @@ To add support for a new network to the squid, follow these steps:
 1. **Configure Network Constants**
 
    - Create a new file `./config/{CHAIN_TAG}/network.constant.ts`:
+
      ```bash
      mkdir -p ./config/{CHAIN_TAG}
      touch ./config/{CHAIN_TAG}/network.constant.ts
      ```
+
    - Add the new network configuration with required parameters in the created file
 
 2. **Generate Indexer Files**
