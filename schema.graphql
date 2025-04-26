@@ -94,8 +94,6 @@ type Token @entity {
 
   price: Float!
 
-  tvlUSD: Float!
-
   # number of pools containing this token
   poolCount: Int!
 
