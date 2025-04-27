@@ -80,8 +80,8 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
 
   return new Token({
     id: tokenId,
-    name: name,
-    symbol: symbol,
+    name: sanitizeString(name),
+    symbol: sanitizeString(symbol),
     decimals: decimals,
     price: isTokenStable ? 1 : 0,
     poolCount: 0,
