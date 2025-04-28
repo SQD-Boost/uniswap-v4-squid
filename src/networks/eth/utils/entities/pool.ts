@@ -132,7 +132,10 @@ export const updatePoolStates = async (
   if (swappedAmount0 > ZERO_BI) {
     const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
 
-    fee0 = (swappedAmount0 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
+    fee0 =
+      BigInt(fee) === BASE_FEE
+        ? swappedAmount0
+        : (swappedAmount0 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
     pool.volumeToken0 += swappedAmount0;
     pool.volumeToken0D = convertTokenToDecimal(
       pool.volumeToken0,
@@ -147,7 +150,10 @@ export const updatePoolStates = async (
   } else if (swappedAmount1 > ZERO_BI) {
     const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
 
-    fee1 = (swappedAmount1 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
+    fee1 =
+      BigInt(fee) === BASE_FEE
+        ? swappedAmount1
+        : (swappedAmount1 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
     pool.volumeToken1 += swappedAmount1;
     pool.volumeToken1D = convertTokenToDecimal(
       pool.volumeToken1,
