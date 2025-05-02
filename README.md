@@ -8,7 +8,11 @@ This [squid](https://docs.subsquid.io/sdk/overview/) indexer tracks events emitt
 
 Here are the commands to run the squid:
 
+
 ```bash
+# Prerequisite - Install Squid CLI:
+npm i -g @subsquid/cli
+
 # 1. Clone the repository
 git clone https://github.com/subsquid-labs/uniswapv4-squid
 cd uniswapv4-squid
