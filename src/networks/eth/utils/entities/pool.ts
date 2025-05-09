@@ -46,6 +46,7 @@ export const createPool = (
     price0: token0Price,
     price1: token1Price,
     fee: fee,
+    poolAddress: poolAddress,
     hookId: hookId,
     sqrtPriceX96: sqrtPriceX96,
     currentTick: tick,

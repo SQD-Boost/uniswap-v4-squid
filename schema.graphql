@@ -155,6 +155,8 @@ type Pool @entity {
   " relative price of token1"
   price1: Float!
 
+  poolAddress: String!
+
   " pool fee tier "
   fee: Int!
 
