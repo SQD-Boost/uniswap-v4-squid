@@ -226,7 +226,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       if (permissionReccordTx.tokendaydata) {
         await updateTokenDayData(mctx, log, priceUpdate);
       }
-      if (permissionReccordTx.tokendaydata) {
+      if (permissionReccordTx.tokenhourdata) {
         await updateTokenHourData(mctx, log, priceUpdate);
       }
     }
