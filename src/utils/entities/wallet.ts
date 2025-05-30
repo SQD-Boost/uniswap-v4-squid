@@ -1,4 +1,4 @@
-import { Wallet } from "../../../../model";
+import { Wallet } from "../../model";
 import { CHAIN_ID } from "../constants/network.constant";
 import { getWalletId } from "../helpers/ids.helper";
 

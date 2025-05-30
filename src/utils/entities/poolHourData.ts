@@ -1,4 +1,4 @@
-import { Pool, PoolHourData, Token } from "../../../../model";
+import { Pool, PoolHourData, Token } from "../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {

@@ -1,4 +1,4 @@
-import { Bundle, Pool } from "../../../../model";
+import { Bundle, Pool } from "../../model";
 import { getBundleId, getPoolId } from "../helpers/ids.helper";
 import {
   BUNDLE_SOURCE_POOL_ID,

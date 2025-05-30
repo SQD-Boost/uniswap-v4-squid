@@ -2,10 +2,10 @@ import { CHAIN_ID, POOL_MANAGER } from "../constants/network.constant";
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
 import { getPoolManagerId } from "../helpers/ids.helper";
-import { PoolManager } from "../../../../model";
+import { PoolManager } from "../../model";
 import { ZERO_BI } from "../constants/global.contant";
 import { MappingContext } from "../../main";
-import * as poolManagerAbi from "../../../../abi/poolManager";
+import * as poolManagerAbi from "../../abi/poolManager";
 
 export const initializePoolManager = async (
   ctx: DataHandlerContext<StoreWithCache, {}>

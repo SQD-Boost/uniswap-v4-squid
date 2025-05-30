@@ -3,7 +3,7 @@ import {
   TypeormDatabaseWithCache,
 } from "@belopash/typeorm-store";
 import { ProcessorContext, processor } from "./processor";
-import { TaskQueue } from "../../utils/queue";
+import { TaskQueue } from "./utils/queue";
 import { initializeBundle } from "./utils/entities/bundle";
 import {
   block_intervals,
@@ -11,8 +11,8 @@ import {
   NFT_POSITION_MANAGER,
   POOL_MANAGER,
 } from "./utils/constants/network.constant";
-import * as nftPositionAbi from "../../abi/nftPosition";
-import * as poolManagerAbi from "../../abi/poolManager";
+import * as nftPositionAbi from "./abi/nftPosition";
+import * as poolManagerAbi from "./abi/poolManager";
 
 import { handleTransferPosition } from "./mappings/positionManager";
 import {

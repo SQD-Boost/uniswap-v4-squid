@@ -1,4 +1,4 @@
-import { Pool, TokenDayData } from "../../../../model";
+import { Pool, TokenDayData } from "../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { ONE_BI, ZERO_BI } from "../constants/global.contant";

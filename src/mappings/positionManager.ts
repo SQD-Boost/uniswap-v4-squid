@@ -1,10 +1,10 @@
 import { MappingContext } from "../main";
 
-import * as nftPositionAbi from "../../../abi/nftPosition";
+import * as nftPositionAbi from "../abi/nftPosition";
 import { Log } from "../processor";
 import { createWallet } from "../utils/entities/wallet";
 import { createPositionUpdateOwner } from "../utils/entities/position";
-import { Position, Wallet } from "../../../model";
+import { Position, Wallet } from "../model";
 import { getPositionId, getWalletId } from "../utils/helpers/ids.helper";
 
 export const handleTransferPosition = (mctx: MappingContext, log: Log) => {

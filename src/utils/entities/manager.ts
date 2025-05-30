@@ -2,7 +2,7 @@ import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
 import { getManagerId } from "../helpers/ids.helper";
 import { CHAIN_ID } from "../constants/network.constant";
-import { Manager } from "../../../../model";
+import { Manager } from "../../model";
 
 export const createManager = async (
   ctx: DataHandlerContext<StoreWithCache, {}>,

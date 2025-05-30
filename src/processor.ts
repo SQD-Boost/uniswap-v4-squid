@@ -17,8 +17,8 @@ import {
   POOL_MANAGER_FIRST_BLOCK,
   RPC_URL,
 } from "./utils/constants/network.constant";
-import * as poolManagerAbi from "../../abi/poolManager";
-import * as nftPositionAbi from "../../abi/nftPosition";
+import * as poolManagerAbi from "./abi/poolManager";
+import * as nftPositionAbi from "./abi/nftPosition";
 import fs from "fs";
 import { TokenInfo } from "./tools/tokensRetriever";
 

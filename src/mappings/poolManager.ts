@@ -1,6 +1,6 @@
 import { MappingContext } from "../main";
 import { Log } from "../processor";
-import * as poolManagerAbi from "../../../abi/poolManager";
+import * as poolManagerAbi from "../abi/poolManager";
 import {
   createToken,
   incrementTokensSwapCount,
@@ -14,7 +14,7 @@ import {
   PoolManager,
   Token,
   Wallet,
-} from "../../../model";
+} from "../model";
 import {
   getHookId,
   getPoolDayDataId,
@@ -24,7 +24,6 @@ import {
   getTokenId,
   getWalletId,
 } from "../utils/helpers/ids.helper";
-import { ZERO_ADDRESS } from "../utils/constants/global.contant";
 import { createHook } from "../utils/entities/hook";
 import { createPool, updatePoolStates } from "../utils/entities/pool";
 import { getPricesFromSqrtPriceX96 } from "../utils/helpers/global.helper";

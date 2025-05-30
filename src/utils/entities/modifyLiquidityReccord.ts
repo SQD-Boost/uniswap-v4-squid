@@ -1,4 +1,4 @@
-import { ModifyLiquidityReccord } from "../../../../model";
+import { ModifyLiquidityReccord } from "../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { getModifyLiquidityReccordId, getPoolId } from "../helpers/ids.helper";

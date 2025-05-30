@@ -1,4 +1,4 @@
-import { Pool, Token } from "../../../../model";
+import { Pool, Token } from "../../model";
 import { MappingContext } from "../../main";
 import { getPoolId } from "../helpers/ids.helper";
 import { Log } from "../../processor";

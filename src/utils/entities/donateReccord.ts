@@ -1,4 +1,4 @@
-import { DonateReccord } from "../../../../model";
+import { DonateReccord } from "../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { getDonateReccordId, getPoolId } from "../helpers/ids.helper";

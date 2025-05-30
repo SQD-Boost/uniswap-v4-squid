@@ -1,5 +1,5 @@
-import { Pool, TokenHourData } from "../../../../model";
 import { MappingContext } from "../../main";
+import { Pool, TokenHourData } from "../../model";
 import { Log } from "../../processor";
 import { ONE_BI, ZERO_BI } from "../constants/global.contant";
 import { CHAIN_ID } from "../constants/network.constant";

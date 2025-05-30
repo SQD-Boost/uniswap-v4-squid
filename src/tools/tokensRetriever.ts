@@ -11,10 +11,10 @@ import {
   POOL_MANAGER_FIRST_BLOCK,
   RPC_URL,
 } from "../utils/constants/network.constant";
-import * as poolManagerAbi from "../../../abi/poolManager";
-import * as ERC20Abi from "../../../abi/ERC20";
-import * as ERC20NameBytesAbi from "../../../abi/ERC20NameBytes";
-import * as ERC20SymbolBytesAbi from "../../../abi/ERC20SymbolBytes";
+import * as poolManagerAbi from "../abi/poolManager";
+import * as ERC20Abi from "../abi/ERC20";
+import * as ERC20NameBytesAbi from "../abi/ERC20NameBytes";
+import * as ERC20SymbolBytesAbi from "../abi/ERC20SymbolBytes";
 import { hexToString } from "../utils/helpers/global.helper";
 import { ZERO_ADDRESS } from "../utils/constants/global.contant";
 

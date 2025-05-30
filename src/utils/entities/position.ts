@@ -5,7 +5,7 @@ import {
   MoreThanOrEqual,
   Not,
 } from "typeorm";
-import { Pool, Position, Token } from "../../../../model";
+import { Pool, Position, Token } from "../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {

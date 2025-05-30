@@ -1,4 +1,4 @@
-import { Hook } from "../../../../model";
+import { Hook } from "../../model";
 import { ZERO_BI } from "../constants/global.contant";
 import { CHAIN_ID } from "../constants/network.constant";
 import { getHookId } from "../helpers/ids.helper";

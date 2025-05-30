@@ -1,4 +1,4 @@
-import { SwapReccord } from "../../../../model";
+import { SwapReccord } from "../../model";
 import { MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { getPoolId, getSwapReccordId } from "../helpers/ids.helper";
