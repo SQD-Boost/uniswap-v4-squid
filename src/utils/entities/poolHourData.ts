@@ -1,5 +1,5 @@
 import { Pool, PoolHourData, Token } from "../../model";
-import { MappingContext } from "../../main";
+import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {
   BASE_FEE,
@@ -8,7 +8,6 @@ import {
   ZERO_BI,
   ZERO_STRING,
 } from "../constants/global.contant";
-import { CHAIN_ID } from "../constants/network.constant";
 import {
   convertTokenToDecimal,
   getHourIndex,
@@ -46,7 +45,7 @@ export const createPoolHourData = (
     high: token0Price,
     low: token0Price,
     close: token0Price,
-    chainId: CHAIN_ID,
+    chainId: config.chainId,
   });
 };
 

@@ -1,8 +1,7 @@
-import { MappingContext } from "../../main";
+import { config, MappingContext } from "../../main";
 import { Pool, TokenHourData } from "../../model";
 import { Log } from "../../processor";
 import { ONE_BI, ZERO_BI } from "../constants/global.contant";
-import { CHAIN_ID } from "../constants/network.constant";
 import { getHourIndex, HOUR_MS } from "../helpers/global.helper";
 import { getPoolId, getTokenHourDataId } from "../helpers/ids.helper";
 
@@ -22,7 +21,7 @@ export const createTokenHourData = (
     high: -1,
     low: -1,
     close: -1,
-    chainId: CHAIN_ID,
+    chainId: config.chainId,
   });
 };
 

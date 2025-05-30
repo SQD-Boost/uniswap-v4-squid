@@ -1,8 +1,8 @@
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
 import { getManagerId } from "../helpers/ids.helper";
-import { CHAIN_ID } from "../constants/network.constant";
 import { Manager } from "../../model";
+import { config } from "../../main";
 
 export const createManager = async (
   ctx: DataHandlerContext<StoreWithCache, {}>,
@@ -14,7 +14,7 @@ export const createManager = async (
     managerEntity = new Manager({
       id: managerId,
       managerAddress: managerAddress,
-      chainId: CHAIN_ID,
+      chainId: config.chainId,
     });
     await ctx.store.insert(managerEntity);
   }

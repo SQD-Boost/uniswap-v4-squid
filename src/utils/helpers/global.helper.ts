@@ -1,3 +1,4 @@
+import { config } from "../../main";
 import {
   MAX_TICK,
   MaxUint256,
@@ -8,11 +9,6 @@ import {
   ZERO_ADDRESS,
   ZERO_BI,
 } from "../constants/global.contant";
-import {
-  BASE_TOKEN_ADDRESSES,
-  STABLE_DECIMALS,
-  WRAP_NATIVE,
-} from "../constants/network.constant";
 import { getTokenId } from "./ids.helper";
 
 export function hexToString(hex: string): string {
@@ -80,9 +76,9 @@ export const getAllTokensInBaseAmount = (
   price0: number,
   price1: number
 ): number => {
-  const isToken0Base = BASE_TOKEN_ADDRESSES.map((token) =>
-    getTokenId(token)
-  ).includes(token0Id);
+  const isToken0Base = config.baseTokenAddresses
+    .map((token) => getTokenId(token))
+    .includes(token0Id);
 
   if (isToken0Base) {
     const amount1InBase =
@@ -107,18 +103,18 @@ export const calculateCoreTotalUSD = (
   positionBaseAmount: number,
   bundleNativePrice: number
 ): number => {
-  const isToken0Stablecoin = Object.keys(STABLE_DECIMALS)
+  const isToken0Stablecoin = config.stableAddresses
     .map(getTokenId)
     .includes(token0Id);
-  const isToken1Stablecoin = Object.keys(STABLE_DECIMALS)
+  const isToken1Stablecoin = config.stableAddresses
     .map(getTokenId)
     .includes(token1Id);
 
   const isToken0WrappedNative =
-    getTokenId(WRAP_NATIVE) === token0Id ||
+    getTokenId(config.wrapNative) === token0Id ||
     getTokenId(ZERO_ADDRESS) === token0Id;
   const isToken1WrappedNative =
-    getTokenId(WRAP_NATIVE) === token1Id ||
+    getTokenId(config.wrapNative) === token1Id ||
     getTokenId(ZERO_ADDRESS) === token1Id;
 
   if (isToken0Stablecoin || isToken1Stablecoin) {

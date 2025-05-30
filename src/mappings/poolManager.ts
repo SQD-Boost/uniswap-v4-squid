@@ -1,4 +1,4 @@
-import { MappingContext } from "../main";
+import { config, MappingContext } from "../main";
 import { Log } from "../processor";
 import * as poolManagerAbi from "../abi/poolManager";
 import {
@@ -32,10 +32,6 @@ import { updatePoolDayData } from "../utils/entities/poolDayData";
 import { updatePoolHourData } from "../utils/entities/poolHourData";
 import { createModifyLiquidityReccord } from "../utils/entities/modifyLiquidityReccord";
 import { createWallet } from "../utils/entities/wallet";
-import {
-  BUNDLE_SOURCE_POOL_ID,
-  permissionReccordTx,
-} from "../utils/constants/network.constant";
 import { createSwapReccord } from "../utils/entities/swapReccord";
 import { createDonateReccord } from "../utils/entities/donateReccord";
 import { updateBundlePrice } from "../utils/entities/bundle";
@@ -144,7 +140,7 @@ export const handleModifyLiquidity = (mctx: MappingContext, log: Log) => {
       await mctx.store.insert(wallet);
     }
 
-    if (permissionReccordTx.modifyLiquidity) {
+    if (config.permissionRecordTx.modifyLiquidity) {
       await createModifyLiquidityReccord(
         mctx,
         id,
@@ -171,10 +167,10 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
 
   mctx.queue.add(async () => {
     await incrementTokensSwapCount(mctx, log, id);
-    if (permissionReccordTx.tokendaydata) {
+    if (config.permissionRecordTx.tokendaydata) {
       await incrementTokensDayDataSwapCount(mctx, log, id);
     }
-    if (permissionReccordTx.tokenhourdata) {
+    if (config.permissionRecordTx.tokenhourdata) {
       await incrementTokensHourDataSwapCount(mctx, log, id);
     }
     const { volumeUSDAdded, feeUSDAdded } = await updatePoolStates(
@@ -190,7 +186,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
     );
 
     await addFeeVolumePoolManager(mctx, volumeUSDAdded, feeUSDAdded);
-    if (permissionReccordTx.pooldaydata) {
+    if (config.permissionRecordTx.pooldaydata) {
       await updatePoolDayData(
         mctx,
         log,
@@ -203,7 +199,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
         fee
       );
     }
-    if (permissionReccordTx.poolhourdata) {
+    if (config.permissionRecordTx.poolhourdata) {
       await updatePoolHourData(
         mctx,
         log,
@@ -217,15 +213,15 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       );
     }
 
-    if (id === BUNDLE_SOURCE_POOL_ID) {
+    if (id === config.bundleSourcePoolId) {
       await updateBundlePrice(mctx);
     }
     const priceUpdate = await updateTokenPrice(mctx, id);
     if (priceUpdate) {
-      if (permissionReccordTx.tokendaydata) {
+      if (config.permissionRecordTx.tokendaydata) {
         await updateTokenDayData(mctx, log, priceUpdate);
       }
-      if (permissionReccordTx.tokenhourdata) {
+      if (config.permissionRecordTx.tokenhourdata) {
         await updateTokenHourData(mctx, log, priceUpdate);
       }
     }
@@ -237,7 +233,7 @@ export const handleSwap = (mctx: MappingContext, log: Log) => {
       await mctx.store.insert(wallet);
     }
 
-    if (permissionReccordTx.swap) {
+    if (config.permissionRecordTx.swap) {
       await createSwapReccord(
         mctx,
         id,
@@ -268,7 +264,7 @@ export const handleDonate = (mctx: MappingContext, log: Log) => {
       await mctx.store.insert(wallet);
     }
 
-    if (permissionReccordTx.donate) {
+    if (config.permissionRecordTx.donate) {
       await createDonateReccord(mctx, id, walletId, log, amount0, amount1);
     }
   });

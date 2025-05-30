@@ -4,27 +4,37 @@ import {
   EvmBatchProcessor,
 } from "@subsquid/evm-processor";
 import { Database, LocalDest, Store } from "@subsquid/file-store";
-import {
-  CHAIN_TAG,
-  GATEWAY_SQD_URL,
-  POOL_MANAGER,
-  POOL_MANAGER_FIRST_BLOCK,
-  RPC_URL,
-} from "../utils/constants/network.constant";
+
 import * as poolManagerAbi from "../abi/poolManager";
 import * as ERC20Abi from "../abi/ERC20";
 import * as ERC20NameBytesAbi from "../abi/ERC20NameBytes";
 import * as ERC20SymbolBytesAbi from "../abi/ERC20SymbolBytes";
 import { hexToString } from "../utils/helpers/global.helper";
 import { ZERO_ADDRESS } from "../utils/constants/global.contant";
+import assert from "assert";
+import { networksConfigs } from "../utils/constants/network.constant";
+
+assert(
+  networksConfigs.hasOwnProperty(process.argv[2]),
+  `Processor executable takes one argument - a network string ID - ` +
+    `that must be in ${JSON.stringify(Object.keys(networksConfigs))}. Got "${
+      process.argv[2]
+    }".`
+);
+
+const network = process.argv[2];
+const config = networksConfigs[network];
 
 const processor = new EvmBatchProcessor()
-  .setGateway(GATEWAY_SQD_URL)
+  .setGateway(config.gatewaySqdUrl)
   .setRpcEndpoint({
-    url: assertNotNull(RPC_URL, "Required env variable RPC_HTTP is missing"),
+    url: assertNotNull(
+      config.rpcUrl,
+      "Required env variable RPC_HTTP is missing"
+    ),
   })
   .setBlockRange({
-    from: POOL_MANAGER_FIRST_BLOCK,
+    from: config.poolManagerFirstBlock,
   })
   .setFields({
     log: {
@@ -34,7 +44,7 @@ const processor = new EvmBatchProcessor()
     },
   })
   .addLog({
-    address: [POOL_MANAGER],
+    address: [config.poolManager],
     topic0: [poolManagerAbi.events.Initialize.topic],
   })
   .setFinalityConfirmation(75);
@@ -59,7 +69,7 @@ type Metadata = {
 
 let db = new Database({
   tables: {},
-  dest: new LocalDest(`./assets/${CHAIN_TAG}`),
+  dest: new LocalDest(`./assets/${config.chainTag}`),
   chunkSizeMb: Infinity,
   hooks: {
     async onStateRead(dest) {
@@ -161,7 +171,7 @@ processor.run(db, async (ctx) => {
   const promises = [];
   for (let c of ctx.blocks) {
     for (let log of c.logs) {
-      if (log.address === POOL_MANAGER) {
+      if (log.address === config.poolManager) {
         try {
           let { currency0, currency1 } =
             poolManagerAbi.events.Initialize.decode(log);

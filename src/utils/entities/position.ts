@@ -6,14 +6,13 @@ import {
   Not,
 } from "typeorm";
 import { Pool, Position, Token } from "../../model";
-import { MappingContext } from "../../main";
+import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {
   IMPOSSIBLE_TICK,
   ZERO_BI,
   ZERO_STRING,
 } from "../constants/global.contant";
-import { CHAIN_ID, NFT_POSITION_MANAGER } from "../constants/network.constant";
 import {
   convertTokenToDecimal,
   getAmount0,
@@ -36,7 +35,7 @@ export const createPositionUpdateOwner = (log: Log, nftId: bigint) => {
     amount1D: ZERO_STRING,
     coreTotalUSD: 0,
     managerId: getManagerId(log.address),
-    chainId: CHAIN_ID,
+    chainId: config.chainId,
     blockNumber: BigInt(log.block.height),
     timestamp: BigInt(log.block.timestamp),
   });
@@ -53,7 +52,7 @@ export const updatePositionAndPool = async (
   tickUpper: number
 ) => {
   const nftId = parseInt(salt, 16);
-  let positionId = getPositionId(NFT_POSITION_MANAGER, nftId);
+  let positionId = getPositionId(config.nftPositionManager, nftId);
   let poolId = getPoolId(id);
 
   if (liquidityDelta === ZERO_BI) {
@@ -177,7 +176,7 @@ export const getPositionRatio = (
 export const updateAllPositionsOnce = async (mctx: MappingContext) => {
   const pools = await mctx.store.find(Pool, {
     where: {
-      chainId: CHAIN_ID,
+      chainId: config.chainId,
     },
   });
 
@@ -239,7 +238,7 @@ export const updateAllPositionsSwapped = async (mctx: MappingContext) => {
       {
         batchBlockMaximumTick: Not(IMPOSSIBLE_TICK),
         batchBlockMinimumTick: Not(IMPOSSIBLE_TICK),
-        chainId: CHAIN_ID,
+        chainId: config.chainId,
       },
     ],
   });
@@ -335,7 +334,7 @@ export async function updateAllPositionsCoreTotalUSD(
   while (true) {
     const positions = await mctx.store.find(Position, {
       where: {
-        chainId: CHAIN_ID,
+        chainId: config.chainId,
         liquidity: MoreThan(ZERO_BI),
       },
       skip: skip,

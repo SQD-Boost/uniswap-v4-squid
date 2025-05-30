@@ -1,8 +1,7 @@
 import { Pool, TokenDayData } from "../../model";
-import { MappingContext } from "../../main";
+import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { ONE_BI, ZERO_BI } from "../constants/global.contant";
-import { CHAIN_ID } from "../constants/network.constant";
 import { DAY_MS, getDayIndex } from "../helpers/global.helper";
 import { getPoolId, getTokenDayDataId } from "../helpers/ids.helper";
 
@@ -22,7 +21,7 @@ export const createTokenDayData = (
     high: -1,
     low: -1,
     close: -1,
-    chainId: CHAIN_ID,
+    chainId: config.chainId,
   });
 };
 

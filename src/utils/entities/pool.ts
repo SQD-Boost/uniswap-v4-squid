@@ -1,5 +1,5 @@
 import { Pool, Token } from "../../model";
-import { MappingContext } from "../../main";
+import { config, MappingContext } from "../../main";
 import { getPoolId } from "../helpers/ids.helper";
 import { Log } from "../../processor";
 import {
@@ -14,7 +14,6 @@ import {
   convertTokenToDecimal,
   getPricesFromSqrtPriceX96,
 } from "../helpers/global.helper";
-import { CHAIN_ID } from "../constants/network.constant";
 import { MoreThan } from "typeorm";
 
 export const createPool = (
@@ -64,7 +63,7 @@ export const createPool = (
     tvlUSD: 0,
     tickSpacing: tickSpacing,
     swapCount: ZERO_BI,
-    chainId: CHAIN_ID,
+    chainId: config.chainId,
     blockNumber: ZERO_BI,
     timestamp: ZERO_BI,
     createdAtBlockNumber: BigInt(log.block.height),
@@ -214,7 +213,7 @@ export async function updateAllPoolsTvlUSD(
   while (true) {
     const pools = await mctx.store.find(Pool, {
       where: {
-        chainId: CHAIN_ID,
+        chainId: config.chainId,
         liquidity: MoreThan(ZERO_BI),
       },
       skip: skip,

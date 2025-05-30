@@ -2,27 +2,16 @@ import * as erc20Abi from "../../abi/ERC20";
 import * as ERC20NameBytesAbi from "../../abi/ERC20NameBytes";
 import * as ERC20SymbolBytes from "../../abi/ERC20SymbolBytes";
 import { Bundle, Pool, Token } from "../../model";
-import { MappingContext } from "../../main";
+import { config, MappingContext, preloadedTokensMetadata } from "../../main";
 import { ONE_BI, ZERO_ADDRESS } from "../constants/global.contant";
-import {
-  BASE_TOKEN_ADDRESSES,
-  CHAIN_ID,
-  native_decimals,
-  native_name,
-  native_symbol,
-  STABLE_ADDRESSES,
-} from "../constants/network.constant";
+
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
 import { hexToString, sanitizeString } from "../helpers/global.helper";
 import { In } from "typeorm";
 import { getBundleId, getPoolId, getTokenId } from "../helpers/ids.helper";
 import { ZERO_BI } from "../constants/global.contant";
-import {
-  Log,
-  preloadedTokensMetadata,
-  ProcessorContext,
-} from "../../processor";
+import { Log, ProcessorContext } from "../../processor";
 
 export const createToken = async (mctx: MappingContext, currency: string) => {
   const latestBlock = mctx.blocks[mctx.blocks.length - 1];
@@ -70,7 +59,7 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
 
   const tokenId = getTokenId(currency);
 
-  const isTokenStable = STABLE_ADDRESSES.some(
+  const isTokenStable = config.stableAddresses.some(
     (address) => getTokenId(address).toLowerCase() === tokenId
   );
 
@@ -82,7 +71,7 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
     price: isTokenStable ? 1 : 0,
     poolCount: 0,
     swapCount: ZERO_BI,
-    chainId: CHAIN_ID,
+    chainId: config.chainId,
     tokenAddress: currency,
     blockNumber: BigInt(latestBlock.header.height),
     timestamp: BigInt(latestBlock.header.timestamp),
@@ -97,13 +86,13 @@ export const createNativeToken = async (
   if (!token) {
     token = new Token({
       id: tokenId,
-      name: native_name,
-      symbol: native_symbol,
-      decimals: native_decimals,
+      name: config.nativeName,
+      symbol: config.nativeSymbol,
+      decimals: config.nativeDecimals,
       price: 0,
       poolCount: 0,
       swapCount: ZERO_BI,
-      chainId: CHAIN_ID,
+      chainId: config.chainId,
       tokenAddress: ZERO_ADDRESS,
       blockNumber: ZERO_BI,
       timestamp: ZERO_BI,
@@ -132,7 +121,7 @@ export const initializeTokens = async (
 
   let arrayTokens = missingTokens.map((tokenInfo) => {
     const tokenId = getTokenId(tokenInfo.address);
-    const isTokenStable = STABLE_ADDRESSES.some(
+    const isTokenStable = config.stableAddresses.some(
       (address) => getTokenId(address).toLowerCase() === tokenId
     );
     return new Token({
@@ -143,7 +132,7 @@ export const initializeTokens = async (
       price: isTokenStable ? 1 : 0,
       poolCount: 0,
       swapCount: ZERO_BI,
-      chainId: CHAIN_ID,
+      chainId: config.chainId,
       tokenAddress: tokenInfo.address,
       blockNumber: ZERO_BI,
       timestamp: ZERO_BI,
@@ -182,20 +171,20 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
     return null;
   }
 
-  const isToken0Base = BASE_TOKEN_ADDRESSES.some(
+  const isToken0Base = config.baseTokenAddresses.some(
     (address) => getTokenId(address).toLowerCase() === pool.token0Id
   );
 
-  const isToken1Base = BASE_TOKEN_ADDRESSES.some(
+  const isToken1Base = config.baseTokenAddresses.some(
     (address) => getTokenId(address).toLowerCase() === pool.token1Id
   );
 
   if (!isToken0Base && !isToken1Base) return null;
 
-  const isToken0Stable = STABLE_ADDRESSES.some(
+  const isToken0Stable = config.stableAddresses.some(
     (address) => getTokenId(address).toLowerCase() === pool.token0Id
   );
-  const isToken1Stable = STABLE_ADDRESSES.some(
+  const isToken1Stable = config.stableAddresses.some(
     (address) => getTokenId(address).toLowerCase() === pool.token1Id
   );
 

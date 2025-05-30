@@ -1,10 +1,9 @@
-import { CHAIN_ID, POOL_MANAGER } from "../constants/network.constant";
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
 import { getPoolManagerId } from "../helpers/ids.helper";
 import { PoolManager } from "../../model";
 import { ZERO_BI } from "../constants/global.contant";
-import { MappingContext } from "../../main";
+import { config, MappingContext } from "../../main";
 import * as poolManagerAbi from "../../abi/poolManager";
 
 export const initializePoolManager = async (
@@ -19,8 +18,8 @@ export const initializePoolManager = async (
       swapCount: ZERO_BI,
       totalVolumeUSD: 0,
       totalFeesUSD: 0,
-      poolManagerAddress: POOL_MANAGER,
-      chainId: CHAIN_ID,
+      poolManagerAddress: config.poolManager,
+      chainId: config.chainId,
     });
     await ctx.store.insert(poolManager);
   }
@@ -32,7 +31,7 @@ export const sumPoolAndCountPoolManager = async (mctx: MappingContext) => {
   const swapCount = mctx.blocks.flatMap((block) =>
     block.logs.filter(
       (log) =>
-        log.address === POOL_MANAGER &&
+        log.address === config.poolManager &&
         log.topics[0] === poolManagerAbi.events.Swap.topic
     )
   ).length;
@@ -40,7 +39,7 @@ export const sumPoolAndCountPoolManager = async (mctx: MappingContext) => {
   const poolCount = mctx.blocks.flatMap((block) =>
     block.logs.filter(
       (log) =>
-        log.address === POOL_MANAGER &&
+        log.address === config.poolManager &&
         log.topics[0] === poolManagerAbi.events.Initialize.topic
     )
   ).length;

@@ -1,42 +1,42 @@
-import { CHAIN_ID, POOL_MANAGER } from "../constants/network.constant";
+import { config } from "../../main";
 import { getDayIndex, getHourIndex } from "./global.helper";
 
 export const getBundleId = () => {
-  return `${CHAIN_ID}`;
+  return `${config.chainId}`;
 };
 
 export const getPoolManagerId = () => {
-  return `${CHAIN_ID}-${POOL_MANAGER}`;
+  return `${config.chainId}-${config.poolManager}`;
 };
 
 export const getManagerId = (managerAddress: string) => {
-  return `${CHAIN_ID}-${managerAddress}`;
+  return `${config.chainId}-${managerAddress}`;
 };
 
 export const getWalletId = (walletAddress: string) => {
-  return `${CHAIN_ID}-${walletAddress}`;
+  return `${config.chainId}-${walletAddress}`;
 };
 
 export const getPositionId = (
   positionManagerAddress: string,
   nftId: bigint | number
 ) => {
-  return `${CHAIN_ID}-${positionManagerAddress}-${nftId}`;
+  return `${config.chainId}-${positionManagerAddress}-${nftId}`;
 };
 
 export const getTokenId = (tokenAddress: string) => {
-  return `${CHAIN_ID}-${tokenAddress}`;
+  return `${config.chainId}-${tokenAddress}`;
 };
 export const getHookId = (hooksAddress: string) => {
-  return `${CHAIN_ID}-${hooksAddress}`;
+  return `${config.chainId}-${hooksAddress}`;
 };
 export const getPoolId = (poolAddress: string) => {
-  return `${CHAIN_ID}-${poolAddress}`;
+  return `${config.chainId}-${poolAddress}`;
 };
 
 export const getPoolDayDataId = (poolAddress: string, timestamp: number) => {
   let dayIndex = getDayIndex(timestamp);
-  return `${CHAIN_ID}-${poolAddress}-${dayIndex}`;
+  return `${config.chainId}-${poolAddress}-${dayIndex}`;
 };
 export const getTokenDayDataId = (tokenId: string, timestamp: number) => {
   let dayIndex = getDayIndex(timestamp);
@@ -44,7 +44,7 @@ export const getTokenDayDataId = (tokenId: string, timestamp: number) => {
 };
 export const getPoolHourDataId = (poolAddress: string, timestamp: number) => {
   let hourIndex = getHourIndex(timestamp);
-  return `${CHAIN_ID}-${poolAddress}-${hourIndex}`;
+  return `${config.chainId}-${poolAddress}-${hourIndex}`;
 };
 export const getTokenHourDataId = (tokenId: string, timestamp: number) => {
   let hourIndex = getHourIndex(timestamp);
@@ -52,12 +52,12 @@ export const getTokenHourDataId = (tokenId: string, timestamp: number) => {
 };
 
 export const getModifyLiquidityReccordId = (logId: String) => {
-  return `${CHAIN_ID}-${logId}`;
+  return `${config.chainId}-${logId}`;
 };
 
 export const getSwapReccordId = (logId: String) => {
-  return `${CHAIN_ID}-${logId}`;
+  return `${config.chainId}-${logId}`;
 };
 export const getDonateReccordId = (logId: String) => {
-  return `${CHAIN_ID}-${logId}`;
+  return `${config.chainId}-${logId}`;
 };

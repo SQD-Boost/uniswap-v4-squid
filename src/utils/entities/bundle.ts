@@ -1,13 +1,9 @@
 import { Bundle, Pool } from "../../model";
 import { getBundleId, getPoolId } from "../helpers/ids.helper";
-import {
-  BUNDLE_SOURCE_POOL_ID,
-  CHAIN_ID,
-  IS_NATIVE_TOKEN0,
-} from "../constants/network.constant";
+
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
-import { MappingContext } from "../../main";
+import { config, MappingContext } from "../../main";
 
 export const initializeBundle = async (
   ctx: DataHandlerContext<StoreWithCache, {}>
@@ -18,7 +14,7 @@ export const initializeBundle = async (
     bundle = new Bundle({
       id: bundleId,
       nativePriceUSD: 0,
-      chainId: CHAIN_ID,
+      chainId: config.chainId,
     });
     await ctx.store.insert(bundle);
   }
@@ -29,20 +25,20 @@ export const initializeBundle = async (
 export const updateBundlePrice = async (mctx: MappingContext) => {
   const bundleSourcePool = await mctx.store.get(
     Pool,
-    getPoolId(BUNDLE_SOURCE_POOL_ID)
+    getPoolId(config.bundleSourcePoolId)
   );
   if (!bundleSourcePool) {
-    console.log(`Bundle source pool not found: ${BUNDLE_SOURCE_POOL_ID}`);
+    console.log(`Bundle source pool not found: ${config.bundleSourcePoolId}`);
     return;
   }
 
   await mctx.store.upsert(
     new Bundle({
       id: getBundleId(),
-      nativePriceUSD: IS_NATIVE_TOKEN0
+      nativePriceUSD: config.isNativeToken0
         ? bundleSourcePool.price1
         : bundleSourcePool.price0,
-      chainId: CHAIN_ID,
+      chainId: config.chainId,
     })
   );
 };
