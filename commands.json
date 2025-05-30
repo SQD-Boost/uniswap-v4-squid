@@ -147,7 +147,8 @@
       "cmd": [
         "node",
         "--require=dotenv/config",
-        "lib/networks/eth/tools/tokensRetriever.js"
+        "lib/tools/tokensRetriever.js",
+        "eth"
       ]
     },
     "process:eth": {
@@ -159,7 +160,8 @@
       "cmd": [
         "node",
         "--require=dotenv/config",
-        "lib/networks/eth/main.js"
+        "lib/main.js",
+        "eth"
       ]
     },
     "process:prod:eth": {
@@ -169,7 +171,8 @@
       ],
       "cmd": [
         "node",
-        "lib/networks/eth/main.js"
+        "lib/main.js",
+        "eth"
       ],
       "hidden": true
     },
@@ -181,7 +184,8 @@
       "cmd": [
         "node",
         "--require=dotenv/config",
-        "lib/networks/base/tools/tokensRetriever.js"
+        "lib/tools/tokensRetriever.js",
+        "base"
       ]
     },
     "process:base": {
@@ -193,7 +197,8 @@
       "cmd": [
         "node",
         "--require=dotenv/config",
-        "lib/networks/base/main.js"
+        "lib/main.js",
+        "base"
       ]
     },
     "process:prod:base": {
@@ -203,7 +208,8 @@
       ],
       "cmd": [
         "node",
-        "lib/networks/base/main.js"
+        "lib/main.js",
+        "base"
       ],
       "hidden": true
     },
@@ -215,7 +221,8 @@
       "cmd": [
         "node",
         "--require=dotenv/config",
-        "lib/networks/uni/tools/tokensRetriever.js"
+        "lib/tools/tokensRetriever.js",
+        "uni"
       ]
     },
     "process:uni": {
@@ -227,7 +234,8 @@
       "cmd": [
         "node",
         "--require=dotenv/config",
-        "lib/networks/uni/main.js"
+        "lib/main.js",
+        "uni"
       ]
     },
     "process:prod:uni": {
@@ -237,7 +245,8 @@
       ],
       "cmd": [
         "node",
-        "lib/networks/uni/main.js"
+        "lib/main.js",
+        "uni"
       ],
       "hidden": true
     }
