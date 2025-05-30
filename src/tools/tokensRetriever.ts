@@ -9,10 +9,21 @@ import * as poolManagerAbi from "../abi/poolManager";
 import * as ERC20Abi from "../abi/ERC20";
 import * as ERC20NameBytesAbi from "../abi/ERC20NameBytes";
 import * as ERC20SymbolBytesAbi from "../abi/ERC20SymbolBytes";
-import { hexToString } from "../utils/helpers/global.helper";
 import { ZERO_ADDRESS } from "../utils/constants/global.contant";
 import assert from "assert";
 import { networksConfigs } from "../utils/constants/network.constant";
+
+export function hexToString(hex: string): string {
+  hex = hex.startsWith("0x") ? hex.slice(2) : hex;
+
+  let str = "";
+  for (let i = 0; i < hex.length; i += 2) {
+    const code = parseInt(hex.substr(i, 2), 16);
+    if (code === 0) break;
+    str += String.fromCharCode(code);
+  }
+  return str.trim();
+}
 
 assert(
   networksConfigs.hasOwnProperty(process.argv[2]),
