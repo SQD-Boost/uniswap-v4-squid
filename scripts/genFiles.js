@@ -136,7 +136,8 @@ function generateSquidJson(networks) {
       cmd: [
         "node",
         "--require=dotenv/config",
-        `lib/networks/${network}/tools/tokensRetriever.js`,
+        `lib/tools/tokensRetriever.js`,
+        network,
       ],
     };
     baseCommands.commands[`process:${network}`] = {
@@ -145,13 +146,14 @@ function generateSquidJson(networks) {
       cmd: [
         "node",
         "--require=dotenv/config",
-        `lib/networks/${network}/main.js`,
+        `lib/main.js`,
+        network,
       ],
     };
     baseCommands.commands[`process:prod:${network}`] = {
       description: `Start the squid processor for ${network}`,
       deps: ["migration:apply"],
-      cmd: ["node", `lib/networks/${network}/main.js`],
+      cmd: ["node", `lib/main.js`, network],
       hidden: true,
     };
   });

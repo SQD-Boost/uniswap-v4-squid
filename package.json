@@ -3,7 +3,6 @@
   "private": true,
   "scripts": {
     "build": "rm -rf lib && tsc",
-    "network:add": "node scripts/addnetwork.js",
     "gen": "node scripts/genFiles.js"
   },
   "dependencies": {
