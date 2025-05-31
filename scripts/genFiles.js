@@ -8,7 +8,7 @@ const networks = ["eth", "base","uni"];
 function generateSquidYaml(networks) {
   const config = {
     manifestVersion: "subsquid.io/v0.1",
-    name: "farm-squid",
+    name: "uniswapV4-squid",
     version: 1,
     description: "Marcopoloo",
     build: {},
