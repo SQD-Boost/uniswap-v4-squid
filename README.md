@@ -15,7 +15,7 @@ npm i -g @subsquid/cli
 
 # 1. Clone the repository
 git clone https://github.com/SQD-Boost/uniswap-v4-squid
-cd uniswapv4-squid
+cd uniswap-v4-squid
 
 # 2. Install dependencies
 npm ci
