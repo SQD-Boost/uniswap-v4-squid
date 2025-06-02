@@ -14,7 +14,7 @@ Here are the commands to run the squid:
 npm i -g @subsquid/cli
 
 # 1. Clone the repository
-git clone https://github.com/subsquid-labs/uniswapv4-squid
+git clone https://github.com/SQD-Boost/uniswapV4-squid
 cd uniswapv4-squid
 
 # 2. Install dependencies
