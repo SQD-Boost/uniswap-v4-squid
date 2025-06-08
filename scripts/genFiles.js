@@ -10,7 +10,7 @@ function generateSquidYaml(networks) {
     manifestVersion: "subsquid.io/v0.1",
     name: "uniswap-v4-squid",
     version: 1,
-    description: "Marcopoloo",
+    description: "Uniswap V4 Squid",
     build: {},
     deploy: {
       addons: {
