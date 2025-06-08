@@ -24,20 +24,25 @@ npm ci
 sqd codegen
 sqd typegen
 
-# 4. Start a Postgres database container
+# 4. Create a .env file with custom configuration
+cp .env.example .env
+
+# (Don't forget to add your RPC endpoints to the .env file when running locally)
+
+# 5. Start a Postgres database container
 sqd up
 
-# 5. Generate database migrations
+# 6. Generate database migrations
 sqd migration:generate
 
-# 6. Run the squid
+# 7. Run the squid
 # For a specific chain:
 sqd process:{CHAIN_TAG}  # e.g., sqd process:eth or sqd process:base
 
 # For all configured chains:
 sqd run .
 
-# 7. (in a separate terminal) Start the GraphQL server (only needed for single-chain mode)
+# 8. (in a separate terminal) Start the GraphQL server (only needed for single-chain mode)
 sqd serve
 ```
 
