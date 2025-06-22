@@ -47,7 +47,7 @@ export const networksConfigs: Record<string, NetworkConfig> = {
     nativeDecimals: 18,
     wrapNative: "0x4200000000000000000000000000000000000006",
     rpcUrl: assertNotNull(
-      process.env.RPC_UNI_HTTP,
+      process.env.RPC_UNICHAIN_HTTP,
       "No UNI RPC endpoint supplied via env.RPC_UNI_HTTP"
     ),
     gatewaySqdUrl: "https://v2.archive.subsquid.io/network/unichain-mainnet",
