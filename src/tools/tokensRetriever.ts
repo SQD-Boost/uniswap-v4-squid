@@ -1,30 +1,11 @@
-import {
-  assertNotNull,
-  DataHandlerContext,
-  EvmBatchProcessor,
-} from "@subsquid/evm-processor";
-import { Database, LocalDest, Store } from "@subsquid/file-store";
-
+import { EvmBatchProcessor } from "@subsquid/evm-processor";
+import { Database, LocalDest } from "@subsquid/file-store";
+import { networksConfigs } from "../utils/constants/network.constant";
 import * as poolManagerAbi from "../abi/poolManager";
-import * as ERC20Abi from "../abi/ERC20";
-import * as ERC20NameBytesAbi from "../abi/ERC20NameBytes";
-import * as ERC20SymbolBytesAbi from "../abi/ERC20SymbolBytes";
 import { ZERO_ADDRESS } from "../utils/constants/global.contant";
 import assert from "assert";
-import { networksConfigs } from "../utils/constants/network.constant";
+import { fetchTokensMetadata } from "../utils/helpers/viem.helper";
 import { Metadata, TokenInfo } from "../utils/types/global.type";
-
-export function hexToString(hex: string): string {
-  hex = hex.startsWith("0x") ? hex.slice(2) : hex;
-
-  let str = "";
-  for (let i = 0; i < hex.length; i += 2) {
-    const code = parseInt(hex.substr(i, 2), 16);
-    if (code === 0) break;
-    str += String.fromCharCode(code);
-  }
-  return str.trim();
-}
 
 assert(
   networksConfigs.hasOwnProperty(process.argv[2]),
@@ -40,10 +21,7 @@ const config = networksConfigs[network];
 const processor = new EvmBatchProcessor()
   .setGateway(config.gatewaySqdUrl)
   .setRpcEndpoint({
-    url: assertNotNull(
-      config.rpcUrl,
-      "Required env variable RPC_HTTP is missing"
-    ),
+    url: config.rpcUrl,
   })
   .setBlockRange({
     from: config.poolManagerFirstBlock,
@@ -61,6 +39,7 @@ const processor = new EvmBatchProcessor()
   })
   .setFinalityConfirmation(75);
 
+let tokensSet = new Set<string>();
 let tokens: TokenInfo[] = [];
 
 let tokensInitialized = false;
@@ -80,6 +59,7 @@ let db = new Database({
         }: Metadata = await dest.readFile("tokens.json").then(JSON.parse);
         if (!tokensInitialized) {
           tokens = retrievedTokens;
+          tokensSet = new Set(retrievedTokens.map((token) => token[0]));
           tokensInitialized = true;
         }
         return { height, hash };
@@ -97,65 +77,36 @@ let db = new Database({
   },
 });
 
-async function addUniqueToken(
-  ctx: DataHandlerContext<Store<{}>>,
-  log: any,
-  tokenAddress: string
-) {
-  const normalizedAddress = tokenAddress.toLowerCase();
-  if (normalizedAddress === ZERO_ADDRESS) {
+async function addUniqueTokens(tokenAddresses: string[]) {
+  const normalizedAddresses = tokenAddresses
+    .map((addr) => addr.toLowerCase())
+    .filter((addr) => addr !== ZERO_ADDRESS)
+    .filter((addr) => {
+      if (tokensSet.has(addr)) {
+        return false;
+      }
+      tokensSet.add(addr);
+      return true;
+    });
+
+  if (normalizedAddresses.length === 0) {
     return;
   }
 
-  const exists = tokens.some((token) => token[0] === normalizedAddress);
+  const metadataResults = await fetchTokensMetadata(
+    normalizedAddresses,
+    config.chainId,
+    config.rpcUrl
+  );
 
-  if (!exists) {
-    const latestBlock = ctx.blocks[ctx.blocks.length - 1];
-    const erc20Contract = new ERC20Abi.Contract(
-      ctx,
-      latestBlock.header,
-      normalizedAddress
-    );
-
-    let symbol = "UNKNOWN";
-    let name = "Unknown Token";
-    let decimals = 18;
-
-    try {
-      [symbol, name, decimals] = await Promise.all([
-        erc20Contract.symbol(),
-        erc20Contract.name(),
-        erc20Contract.decimals(),
-      ]);
-    } catch (error) {
-      try {
-        const erc20NameContract = new ERC20NameBytesAbi.Contract(
-          ctx,
-          latestBlock.header,
-          normalizedAddress
-        );
-        const erc20SymbolContract = new ERC20SymbolBytesAbi.Contract(
-          ctx,
-          latestBlock.header,
-          normalizedAddress
-        );
-        [symbol, name, decimals] = await Promise.all([
-          erc20SymbolContract.symbol(),
-          erc20NameContract.name(),
-          erc20Contract.decimals(),
-        ]);
-
-        symbol = hexToString(symbol);
-        name = hexToString(name);
-      } catch (error: any) {
-        console.log(
-          `Error getting name/symbol/decimal for token ${normalizedAddress}, hash ${log.transactionHash} block  ${latestBlock.header.height}: ${error.message}`
-        );
-      }
-    }
-
-    tokens.push([normalizedAddress, name, symbol, decimals]);
-  }
+  metadataResults.forEach((metadata, index) => {
+    tokens.push([
+      normalizedAddresses[index],
+      metadata.name,
+      metadata.symbol,
+      metadata.decimals,
+    ]);
+  });
 }
 
 processor.run(db, async (ctx) => {
@@ -169,8 +120,7 @@ processor.run(db, async (ctx) => {
         try {
           let { currency0, currency1 } =
             poolManagerAbi.events.Initialize.decode(log);
-          promises.push(addUniqueToken(ctx, log, currency0));
-          promises.push(addUniqueToken(ctx, log, currency1));
+          promises.push(addUniqueTokens([currency0, currency1]));
         } catch (error) {
           ctx.log.error(`Error decoding Initialize event: ${error}`);
         }
