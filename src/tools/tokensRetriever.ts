@@ -60,12 +60,12 @@ const processor = new EvmBatchProcessor()
   })
   .setFinalityConfirmation(75);
 
-export interface TokenInfo {
-  address: string;
-  name: string;
-  symbol: string;
-  decimals: number;
-}
+export type TokenInfo = [
+  address: string,
+  name: string,
+  symbol: string,
+  decimals: number
+];
 
 let tokens: TokenInfo[] = [];
 
@@ -119,7 +119,7 @@ async function addUniqueToken(
     return;
   }
 
-  const exists = tokens.some((token) => token.address === normalizedAddress);
+  const exists = tokens.some((token) => token[0] === normalizedAddress);
 
   if (!exists) {
     const latestBlock = ctx.blocks[ctx.blocks.length - 1];
@@ -166,12 +166,7 @@ async function addUniqueToken(
       }
     }
 
-    tokens.push({
-      address: normalizedAddress,
-      name: name,
-      symbol: symbol,
-      decimals: decimals,
-    });
+    tokens.push([normalizedAddress, name, symbol, decimals]);
   }
 }
 

@@ -105,7 +105,7 @@ export const initializeTokens = async (
   ctx: ProcessorContext<StoreWithCache>
 ) => {
   const tokensIds = preloadedTokensMetadata.tokens.map((token) =>
-    getTokenId(token.address)
+    getTokenId(token[0])
   );
   let dbTokensRecords = await ctx.store.findBy(Token, {
     id: In(tokensIds),
@@ -116,24 +116,24 @@ export const initializeTokens = async (
   );
 
   let missingTokens = preloadedTokensMetadata.tokens.filter(
-    (token) => !tokensAddressRecords.includes(token.address)
+    (token) => !tokensAddressRecords.includes(token[0])
   );
 
   let arrayTokens = missingTokens.map((tokenInfo) => {
-    const tokenId = getTokenId(tokenInfo.address);
+    const tokenId = getTokenId(tokenInfo[0]);
     const isTokenStable = config.stableAddresses.some(
       (address) => getTokenId(address).toLowerCase() === tokenId
     );
     return new Token({
       id: tokenId,
-      name: sanitizeString(tokenInfo.name),
-      symbol: sanitizeString(tokenInfo.symbol),
-      decimals: tokenInfo.decimals,
+      name: sanitizeString(tokenInfo[1]),
+      symbol: sanitizeString(tokenInfo[2]),
+      decimals: tokenInfo[3],
       price: isTokenStable ? 1 : 0,
       poolCount: 0,
       swapCount: ZERO_BI,
       chainId: config.chainId,
-      tokenAddress: tokenInfo.address,
+      tokenAddress: tokenInfo[0],
       blockNumber: ZERO_BI,
       timestamp: ZERO_BI,
     });
