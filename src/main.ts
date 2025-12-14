@@ -5,10 +5,8 @@ import {
 import { ProcessorContext, makeProcessor } from "./processor";
 import { TaskQueue } from "./utils/queue";
 import { initializeBundle } from "./utils/entities/bundle";
-
 import * as nftPositionAbi from "./abi/nftPosition";
 import * as poolManagerAbi from "./abi/poolManager";
-
 import { handleTransferPosition } from "./mappings/positionManager";
 import {
   handleDonate,
@@ -22,7 +20,6 @@ import {
   updateAllPositionsOnce,
   updateAllPositionsSwapped,
 } from "./utils/entities/position";
-import fs from "fs";
 import { createManager } from "./utils/entities/manager";
 import {
   initializePoolManager,
@@ -31,7 +28,7 @@ import {
 import { updateAllPoolsTvlUSD } from "./utils/entities/pool";
 import assert from "assert";
 import { networksConfigs } from "./utils/constants/network.constant";
-import { TokenInfo } from "./tools/tokensRetriever";
+import { loadPreloadedTokensMetadata } from "./utils/helpers/metadata.helper";
 
 export type MappingContext = ProcessorContext<StoreWithCache> & {
   queue: TaskQueue;
@@ -48,9 +45,7 @@ assert(
 const network = process.argv[2];
 export const config = networksConfigs[network];
 
-export const preloadedTokensMetadata = JSON.parse(
-  fs.readFileSync(`./assets/${config.chainTag}/tokens.json`, "utf-8")
-) as { height: number; tokens: TokenInfo[] };
+let preloadedTokensMetadata = loadPreloadedTokensMetadata(config.chainTag);
 
 const processor = makeProcessor(config);
 
@@ -70,9 +65,14 @@ processor.run(database, async (ctx) => {
     await initializeBundle(ctx);
     await initializePoolManager(ctx);
     await createNativeToken(ctx);
-    await initializeTokens(ctx);
+    await initializeTokens(ctx, preloadedTokensMetadata!);
     await createManager(ctx, config.nftPositionManager);
     await ctx.store.flush();
+
+    preloadedTokensMetadata = null;
+    if (global.gc) {
+      global.gc();
+    }
 
     handleOnce = true;
   }

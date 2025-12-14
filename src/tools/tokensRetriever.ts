@@ -12,6 +12,7 @@ import * as ERC20SymbolBytesAbi from "../abi/ERC20SymbolBytes";
 import { ZERO_ADDRESS } from "../utils/constants/global.contant";
 import assert from "assert";
 import { networksConfigs } from "../utils/constants/network.constant";
+import { Metadata, TokenInfo } from "../utils/types/global.type";
 
 export function hexToString(hex: string): string {
   hex = hex.startsWith("0x") ? hex.slice(2) : hex;
@@ -60,23 +61,10 @@ const processor = new EvmBatchProcessor()
   })
   .setFinalityConfirmation(75);
 
-export type TokenInfo = [
-  address: string,
-  name: string,
-  symbol: string,
-  decimals: number
-];
-
 let tokens: TokenInfo[] = [];
 
 let tokensInitialized = false;
 let tokensReady = false;
-
-type Metadata = {
-  height: number;
-  hash: string;
-  tokens: TokenInfo[];
-};
 
 let db = new Database({
   tables: {},

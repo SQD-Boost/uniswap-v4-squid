@@ -2,9 +2,8 @@ import * as erc20Abi from "../../abi/ERC20";
 import * as ERC20NameBytesAbi from "../../abi/ERC20NameBytes";
 import * as ERC20SymbolBytes from "../../abi/ERC20SymbolBytes";
 import { Bundle, Pool, Token } from "../../model";
-import { config, MappingContext, preloadedTokensMetadata } from "../../main";
+import { config, MappingContext } from "../../main";
 import { ONE_BI, ZERO_ADDRESS } from "../constants/global.contant";
-
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { StoreWithCache } from "@belopash/typeorm-store";
 import { hexToString, sanitizeString } from "../helpers/global.helper";
@@ -12,6 +11,7 @@ import { In } from "typeorm";
 import { getBundleId, getPoolId, getTokenId } from "../helpers/ids.helper";
 import { ZERO_BI } from "../constants/global.contant";
 import { Log, ProcessorContext } from "../../processor";
+import { Metadata } from "../types/global.type";
 
 export const createToken = async (mctx: MappingContext, currency: string) => {
   const latestBlock = mctx.blocks[mctx.blocks.length - 1];
@@ -102,7 +102,8 @@ export const createNativeToken = async (
 };
 
 export const initializeTokens = async (
-  ctx: ProcessorContext<StoreWithCache>
+  ctx: ProcessorContext<StoreWithCache>,
+  preloadedTokensMetadata: Metadata
 ) => {
   const CHUNK_SIZE = 10000;
   const tokens = preloadedTokensMetadata.tokens;
