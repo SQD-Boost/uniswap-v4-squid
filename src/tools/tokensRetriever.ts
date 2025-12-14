@@ -45,6 +45,9 @@ let tokens: TokenInfo[] = [];
 let tokensInitialized = false;
 let tokensReady = false;
 
+let pendingAddresses = new Set<string>();
+const BATCH_THRESHOLD = 4000;
+
 let db = new Database({
   tables: {},
   dest: new LocalDest(`./assets/${config.chainTag}`),
@@ -93,34 +96,40 @@ async function addUniqueTokens(tokenAddresses: string[]) {
     return;
   }
 
-  const metadataResults = await fetchTokensMetadata(
-    normalizedAddresses,
-    config.chainId,
-    config.rpcUrl
-  );
+  const CHUNK_SIZE = 200;
+  const chunks: string[][] = [];
+  for (let i = 0; i < normalizedAddresses.length; i += CHUNK_SIZE) {
+    chunks.push(normalizedAddresses.slice(i, i + CHUNK_SIZE));
+  }
 
-  metadataResults.forEach((metadata, index) => {
-    tokens.push([
-      normalizedAddresses[index],
-      metadata.name,
-      metadata.symbol,
-      metadata.decimals,
-    ]);
+  const allPromises = chunks.map((chunk) =>
+    fetchTokensMetadata(chunk, config.chainId, config.rpcUrl)
+  );
+  const allResults = await Promise.all(allPromises);
+
+  allResults.forEach((metadataResults, chunkIndex) => {
+    metadataResults.forEach((metadata, index) => {
+      tokens.push([
+        chunks[chunkIndex][index],
+        metadata.name,
+        metadata.symbol,
+        metadata.decimals,
+      ]);
+    });
   });
 }
 
 processor.run(db, async (ctx) => {
   if (tokensReady) process.exit();
-  if (ctx.isHead) tokensReady = true;
 
-  const promises = [];
   for (let c of ctx.blocks) {
     for (let log of c.logs) {
       if (log.address === config.poolManager) {
         try {
           let { currency0, currency1 } =
             poolManagerAbi.events.Initialize.decode(log);
-          promises.push(addUniqueTokens([currency0, currency1]));
+          pendingAddresses.add(currency0);
+          pendingAddresses.add(currency1);
         } catch (error) {
           ctx.log.error(`Error decoding Initialize event: ${error}`);
         }
@@ -128,7 +137,14 @@ processor.run(db, async (ctx) => {
     }
   }
 
-  await Promise.all(promises);
+  if (pendingAddresses.size >= BATCH_THRESHOLD || ctx.isHead) {
+    if (pendingAddresses.size > 0) {
+      await addUniqueTokens(Array.from(pendingAddresses));
+      pendingAddresses.clear();
+    }
+  }
+
+  if (ctx.isHead) tokensReady = true;
 
   ctx.log.info(`tokens: ${tokens.length}`);
   ctx.store.setForceFlush(true);
