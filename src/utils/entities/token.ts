@@ -104,42 +104,51 @@ export const createNativeToken = async (
 export const initializeTokens = async (
   ctx: ProcessorContext<StoreWithCache>
 ) => {
-  const tokensIds = preloadedTokensMetadata.tokens.map((token) =>
-    getTokenId(token[0])
-  );
-  let dbTokensRecords = await ctx.store.findBy(Token, {
-    id: In(tokensIds),
-  });
+  const CHUNK_SIZE = 10000;
+  const tokens = preloadedTokensMetadata.tokens;
 
-  const tokensAddressRecords = dbTokensRecords.map(
-    (token) => token.tokenAddress
-  );
+  for (let i = 0; i < tokens.length; i += CHUNK_SIZE) {
+    const tokenChunk = tokens.slice(i, i + CHUNK_SIZE);
 
-  let missingTokens = preloadedTokensMetadata.tokens.filter(
-    (token) => !tokensAddressRecords.includes(token[0])
-  );
+    const tokensIds = tokenChunk.map((token) => getTokenId(token[0]));
 
-  let arrayTokens = missingTokens.map((tokenInfo) => {
-    const tokenId = getTokenId(tokenInfo[0]);
-    const isTokenStable = config.stableAddresses.some(
-      (address) => getTokenId(address).toLowerCase() === tokenId
-    );
-    return new Token({
-      id: tokenId,
-      name: sanitizeString(tokenInfo[1]),
-      symbol: sanitizeString(tokenInfo[2]),
-      decimals: tokenInfo[3],
-      price: isTokenStable ? 1 : 0,
-      poolCount: 0,
-      swapCount: ZERO_BI,
-      chainId: config.chainId,
-      tokenAddress: tokenInfo[0],
-      blockNumber: ZERO_BI,
-      timestamp: ZERO_BI,
+    let dbTokensRecords = await ctx.store.findBy(Token, {
+      id: In(tokensIds),
     });
-  });
 
-  await ctx.store.save(arrayTokens);
+    const tokensAddressRecords = dbTokensRecords.map(
+      (token) => token.tokenAddress
+    );
+
+    let missingTokens = tokenChunk.filter(
+      (token) => !tokensAddressRecords.includes(token[0])
+    );
+
+    let arrayTokens = missingTokens.map((tokenInfo) => {
+      const tokenId = getTokenId(tokenInfo[0]);
+      const isTokenStable = config.stableAddresses.some(
+        (address) => getTokenId(address).toLowerCase() === tokenId
+      );
+      return new Token({
+        id: tokenId,
+        name: sanitizeString(tokenInfo[1]),
+        symbol: sanitizeString(tokenInfo[2]),
+        decimals: tokenInfo[3],
+        price: isTokenStable ? 1 : 0,
+        poolCount: 0,
+        swapCount: ZERO_BI,
+        chainId: config.chainId,
+        tokenAddress: tokenInfo[0],
+        blockNumber: ZERO_BI,
+        timestamp: ZERO_BI,
+      });
+    });
+
+    await ctx.store.save(arrayTokens);
+    ctx.log.info(
+      `Processed ${i + tokenChunk.length} / ${tokens.length} tokens`
+    );
+  }
 };
 
 export const incrementTokensSwapCount = async (
