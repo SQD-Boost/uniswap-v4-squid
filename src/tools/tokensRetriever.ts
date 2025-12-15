@@ -6,6 +6,11 @@ import { ZERO_ADDRESS } from "../utils/constants/global.contant";
 import assert from "assert";
 import { fetchTokensMetadata } from "../utils/helpers/viem.helper";
 import { Metadata, TokenInfo } from "../utils/types/global.type";
+import { promisify } from "util";
+import * as zlib from "zlib";
+
+const brotliCompress = promisify(zlib.brotliCompress);
+const brotliDecompress = promisify(zlib.brotliDecompress);
 
 assert(
   networksConfigs.hasOwnProperty(process.argv[2]),
@@ -54,28 +59,52 @@ let db = new Database({
   chunkSizeMb: Infinity,
   hooks: {
     async onStateRead(dest) {
-      if (await dest.exists("tokens.json")) {
-        let {
-          height,
-          hash,
-          tokens: retrievedTokens,
-        }: Metadata = await dest.readFile("tokens.json").then(JSON.parse);
-        if (!tokensInitialized) {
-          tokens = retrievedTokens;
-          tokensSet = new Set(retrievedTokens.map((token) => token[0]));
-          tokensInitialized = true;
+      if (await dest.exists("tokens.br")) {
+        try {
+          const fileContent = await dest.readFile("tokens.br");
+
+          const buffer = Buffer.from(fileContent, "base64");
+
+          if (buffer.length === 0) {
+            return undefined;
+          }
+
+          const decompressed = await brotliDecompress(buffer);
+          let {
+            height,
+            hash,
+            tokens: retrievedTokens,
+          }: Metadata = JSON.parse(decompressed.toString());
+          if (!tokensInitialized) {
+            tokens = retrievedTokens;
+            tokensSet = new Set(retrievedTokens.map((token) => token[0]));
+            tokensInitialized = true;
+          }
+          return { height, hash };
+        } catch (error) {
+          console.error("Error reading/decompressing tokens.br:", error);
+          return undefined;
         }
-        return { height, hash };
       } else {
         return undefined;
       }
     },
     async onStateUpdate(dest, info) {
-      let metadata: Metadata = {
-        ...info,
-        tokens,
-      };
-      await dest.writeFile("tokens.json", JSON.stringify(metadata));
+      if (tokensReady) {
+        let metadata: Metadata = {
+          ...info,
+          tokens,
+        };
+        const jsonData = JSON.stringify(metadata);
+        const compressed = await brotliCompress(jsonData, {
+          params: {
+            [zlib.constants.BROTLI_PARAM_QUALITY]:
+              zlib.constants.BROTLI_MAX_QUALITY,
+          },
+        });
+        const base64 = compressed.toString("base64");
+        await dest.writeFile("tokens.br", base64);
+      }
     },
   },
 });
