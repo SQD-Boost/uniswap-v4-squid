@@ -177,6 +177,7 @@ export const updateAllPositionsOnce = async (mctx: MappingContext) => {
   const pools = await mctx.store.find(Pool, {
     where: {
       chainId: config.chainId,
+      liquidity: MoreThan(ZERO_BI),
     },
   });
 
