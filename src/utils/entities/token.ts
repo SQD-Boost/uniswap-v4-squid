@@ -56,7 +56,7 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
       symbol = hexToString(symbol);
       name = hexToString(name);
     } catch (error: any) {
-      console.log(
+      mctx.log.warn(
         `Error getting decimals for token ${currency} : ${error.message}`
       );
     }
@@ -165,7 +165,7 @@ export const incrementTokensSwapCount = async (
   let poolId = getPoolId(id);
   let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`incrementTokensSwapCount: Pool ${poolId} not found`);
+    mctx.log.warn(`incrementTokensSwapCount: Pool ${poolId} not found`);
     return;
   }
 
@@ -173,7 +173,7 @@ export const incrementTokensSwapCount = async (
   let token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
 
   if (!token0 || !token1) {
-    console.log(`incrementTokensSwapCount: Token not found for pool ${poolId}`);
+    mctx.log.warn(`incrementTokensSwapCount: Token not found for pool ${poolId}`);
     return;
   }
 
@@ -185,7 +185,7 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
   let poolId = getPoolId(id);
   let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`updateTokenPrice: Pool ${poolId} not found`);
+    mctx.log.warn(`updateTokenPrice: Pool ${poolId} not found`);
     return null;
   }
 
@@ -209,7 +209,7 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
   const updatePrice = async (tokenId: string, price: number) => {
     const token = await getTokenFromMapOrDb(mctx.store, mctx.entities, tokenId);
     if (!token) {
-      console.log(`updateTokenPrice: Token ${tokenId} not found`);
+      mctx.log.warn(`updateTokenPrice: Token ${tokenId} not found`);
       return null;
     }
     token.price = price;
@@ -223,7 +223,7 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
   } else {
     const bundle = await getBundleFromMapOrDb(mctx.store, mctx.entities, getBundleId());
     if (!bundle) {
-      console.log(`updateTokenPrice: Bundle not found`);
+      mctx.log.warn(`updateTokenPrice: Bundle not found`);
       return null;
     }
     if (isToken0Base) {

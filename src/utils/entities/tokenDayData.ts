@@ -37,7 +37,7 @@ export const incrementTokensDayDataSwapCount = async (
   let poolId = getPoolId(id);
   let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`incrementTokensDayDataSwapCount: Pool ${poolId} not found`);
+    mctx.log.warn(`incrementTokensDayDataSwapCount: Pool ${poolId} not found`);
     return;
   }
 
@@ -81,7 +81,7 @@ export const updateTokenDayData = async (
 
   let tokenDayData = await getTokenDayDataFromMapOrDb(mctx.store, mctx.entities, tokenDayDataId);
   if (!tokenDayData) {
-    console.log(`updateTokenDayData: TokenDayData ${tokenDayDataId} not found`);
+    mctx.log.warn(`updateTokenDayData: TokenDayData ${tokenDayDataId} not found`);
     return;
   }
   if (tokenDayData.open === -1) {

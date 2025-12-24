@@ -113,7 +113,7 @@ processor.run(database, async (ctx) => {
   if (mctx.isHead) {
     if (!hasUpdatedPositions) {
       await updateAllPositionsOnce(mctx);
-      console.log("Update all positions");
+      ctx.log.info("Update all positions");
 
       hasUpdatedPositions = true;
     }

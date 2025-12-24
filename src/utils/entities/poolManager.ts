@@ -48,7 +48,7 @@ export const sumPoolAndCountPoolManager = async (mctx: MappingContext) => {
   const poolManagerId = getPoolManagerId();
   let poolManager = await getPoolManagerFromMapOrDb(mctx.store, mctx.entities, poolManagerId);
   if (!poolManager) {
-    console.log(`sumPoolAndCountPoolManager: PoolManager ${poolManagerId} not found`);
+    mctx.log.warn(`sumPoolAndCountPoolManager: PoolManager ${poolManagerId} not found`);
     return;
   }
 
@@ -64,7 +64,7 @@ export const addFeeVolumePoolManager = async (
   const poolManagerId = getPoolManagerId();
   let poolManager = await getPoolManagerFromMapOrDb(mctx.store, mctx.entities, poolManagerId);
   if (!poolManager) {
-    console.log(`addFeeVolumePoolManager: PoolManager ${poolManagerId} not found`);
+    mctx.log.warn(`addFeeVolumePoolManager: PoolManager ${poolManagerId} not found`);
     return;
   }
 

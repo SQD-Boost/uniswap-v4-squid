@@ -331,7 +331,7 @@ export async function updateAllPositionsCoreTotalUSD(
   let processed = 0;
   let skip = 0;
 
-  console.time("updateAllPositionsCoreTotalUSD");
+  const startTime = Date.now();
 
   while (true) {
     const positions = await mctx.store.find(Position, {
@@ -383,6 +383,6 @@ export async function updateAllPositionsCoreTotalUSD(
     skip += batchSize;
   }
 
-  console.timeEnd("updateAllPositionsCoreTotalUSD");
+  mctx.log.info(`updateAllPositionsCoreTotalUSD completed in ${Date.now() - startTime}ms`);
   return processed;
 }

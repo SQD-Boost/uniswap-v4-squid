@@ -96,7 +96,7 @@ export const updatePoolDayData = async (
   let poolId = getPoolId(id);
   let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`updatePoolDayData: Pool ${poolId} not found`);
+    mctx.log.warn(`updatePoolDayData: Pool ${poolId} not found`);
     return;
   }
 
@@ -148,7 +148,7 @@ export const updatePoolDayData = async (
   if (swappedAmount0 > ZERO_BI) {
     const token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
     if (!token0) {
-      console.log(`updatePoolDayData: Token ${pool.token0Id} not found`);
+      mctx.log.warn(`updatePoolDayData: Token ${pool.token0Id} not found`);
       return;
     }
 
@@ -171,7 +171,7 @@ export const updatePoolDayData = async (
   } else if (swappedAmount1 > ZERO_BI) {
     const token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
     if (!token1) {
-      console.log(`updatePoolDayData: Token ${pool.token1Id} not found`);
+      mctx.log.warn(`updatePoolDayData: Token ${pool.token1Id} not found`);
       return;
     }
 

@@ -37,7 +37,7 @@ export const incrementTokensHourDataSwapCount = async (
   let poolId = getPoolId(id);
   let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`incrementTokensHourDataSwapCount: Pool ${poolId} not found`);
+    mctx.log.warn(`incrementTokensHourDataSwapCount: Pool ${poolId} not found`);
     return;
   }
 
@@ -81,7 +81,7 @@ export const updateTokenHourData = async (
 
   let tokenHourData = await getTokenHourDataFromMapOrDb(mctx.store, mctx.entities, tokenHourDataId);
   if (!tokenHourData) {
-    console.log(`updateTokenHourData: TokenHourData ${tokenHourDataId} not found`);
+    mctx.log.warn(`updateTokenHourData: TokenHourData ${tokenHourDataId} not found`);
     return;
   }
   if (tokenHourData.open === -1) {

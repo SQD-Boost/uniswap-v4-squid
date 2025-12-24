@@ -28,7 +28,7 @@ export const updateBundlePrice = async (mctx: MappingContext) => {
     getPoolId(config.bundleSourcePoolId)
   );
   if (!bundleSourcePool) {
-    console.log(`Bundle source pool not found: ${config.bundleSourcePoolId}`);
+    mctx.log.warn(`Bundle source pool not found: ${config.bundleSourcePoolId}`);
     return;
   }
 

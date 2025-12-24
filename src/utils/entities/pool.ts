@@ -86,7 +86,7 @@ export const updatePoolStates = async (
   let poolId = getPoolId(id);
   let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`updatePoolStates: Pool ${poolId} not found`);
+    mctx.log.warn(`updatePoolStates: Pool ${poolId} not found`);
     return { volumeUSDAdded: 0, feeUSDAdded: 0 };
   }
 
@@ -122,7 +122,7 @@ export const updatePoolStates = async (
   if (swappedAmount0 > ZERO_BI) {
     const token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
     if (!token0) {
-      console.log(`updatePoolStates: Token ${pool.token0Id} not found`);
+      mctx.log.warn(`updatePoolStates: Token ${pool.token0Id} not found`);
       return { volumeUSDAdded: 0, feeUSDAdded: 0 };
     }
 
@@ -144,7 +144,7 @@ export const updatePoolStates = async (
   } else if (swappedAmount1 > ZERO_BI) {
     const token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
     if (!token1) {
-      console.log(`updatePoolStates: Token ${pool.token1Id} not found`);
+      mctx.log.warn(`updatePoolStates: Token ${pool.token1Id} not found`);
       return { volumeUSDAdded: 0, feeUSDAdded: 0 };
     }
 
@@ -203,8 +203,7 @@ export async function updateAllPoolsTvlUSD(
   batchSize: number = 100
 ) {
   let skip = 0;
-
-  console.time("updateAllPoolsTvlUSD");
+  const startTime = Date.now();
 
   while (true) {
     const pools = await mctx.store.find(Pool, {
@@ -251,5 +250,5 @@ export async function updateAllPoolsTvlUSD(
     skip += batchSize;
   }
 
-  console.timeEnd("updateAllPoolsTvlUSD");
+  mctx.log.info(`updateAllPoolsTvlUSD completed in ${Date.now() - startTime}ms`);
 }
