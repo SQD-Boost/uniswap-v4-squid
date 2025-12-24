@@ -7,20 +7,8 @@ import {
   updateTokenPrice,
 } from "../utils/entities/token";
 import {
-  Hook,
-  Pool,
-  PoolDayData,
-  PoolHourData,
-  PoolManager,
-  Token,
-  Wallet,
-} from "../model";
-import {
   getHookId,
-  getPoolDayDataId,
-  getPoolHourDataId,
   getPoolId,
-  getPoolManagerId,
   getTokenId,
   getWalletId,
 } from "../utils/helpers/ids.helper";
@@ -44,8 +32,13 @@ import {
   updateTokenHourData,
 } from "../utils/entities/tokenHourData";
 import { addFeeVolumePoolManager } from "../utils/entities/poolManager";
+import {
+  getTokenFromMapOrDb,
+  getHookFromMapOrDb,
+  getWalletFromMapOrDb,
+} from "../utils/EntityManager";
 
-export const handleInitialize = (mctx: MappingContext, log: Log) => {
+export const handleInitialize = async (mctx: MappingContext, log: Log) => {
   let {
     currency0,
     currency1,
@@ -57,215 +50,190 @@ export const handleInitialize = (mctx: MappingContext, log: Log) => {
     tickSpacing,
   } = poolManagerAbi.events.Initialize.decode(log);
 
-  mctx.store.defer(Token, getTokenId(currency0));
-  mctx.store.defer(Token, getTokenId(currency1));
-  mctx.store.defer(Hook, getHookId(hooks));
+  let token0Id = getTokenId(currency0);
+  let token1Id = getTokenId(currency1);
+  let hookId = getHookId(hooks);
 
-  mctx.queue.add(async () => {
-    let token0;
-    let token1;
+  let token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, token0Id);
+  if (!token0) {
+    token0 = await createToken(mctx, currency0);
+    mctx.entities.tokensMap.set(token0Id, token0);
+  }
+  token0.poolCount += 1;
 
-    let token0Id = getTokenId(currency0);
-    let token1Id = getTokenId(currency1);
-    let hookId = getHookId(hooks);
+  let token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, token1Id);
+  if (!token1) {
+    token1 = await createToken(mctx, currency1);
+    mctx.entities.tokensMap.set(token1Id, token1);
+  }
+  token1.poolCount += 1;
 
-    token0 = await mctx.store.get(Token, token0Id);
-    if (!token0) {
-      token0 = await createToken(mctx, currency0);
-    }
-    token0.poolCount += 1;
+  let hook = await getHookFromMapOrDb(mctx.store, mctx.entities, hookId);
+  if (!hook) {
+    hook = createHook(hooks);
+    mctx.entities.hooksMap.set(hookId, hook);
+  }
 
-    token1 = await mctx.store.get(Token, token1Id);
-    if (!token1) {
-      token1 = await createToken(mctx, currency1);
-    }
-    token1.poolCount += 1;
+  let token0Decimals = token0?.decimals ?? 18;
+  let token1Decimals = token1?.decimals ?? 18;
 
-    await mctx.store.upsert([token0, token1]);
-
-    let hook = await mctx.store.get(Hook, hookId);
-    if (!hook) {
-      hook = createHook(hooks);
-      await mctx.store.insert(hook);
-    }
-
-    let token0Decimals = token0?.decimals ?? 18;
-    let token1Decimals = token1?.decimals ?? 18;
-
-    const { token0Price, token1Price } = getPricesFromSqrtPriceX96(
-      sqrtPriceX96,
-      token0Decimals,
-      token1Decimals
-    );
-    const pool = createPool(
-      id,
-      tick,
-      sqrtPriceX96,
-      fee,
-      token0Id,
-      token1Id,
-      hookId,
-      token0Price,
-      token1Price,
-      token0Decimals,
-      token1Decimals,
-      tickSpacing,
-      log
-    );
-    await mctx.store.insert(pool);
-  });
+  const { token0Price, token1Price } = getPricesFromSqrtPriceX96(
+    sqrtPriceX96,
+    token0Decimals,
+    token1Decimals
+  );
+  const pool = createPool(
+    id,
+    tick,
+    sqrtPriceX96,
+    fee,
+    token0Id,
+    token1Id,
+    hookId,
+    token0Price,
+    token1Price,
+    token0Decimals,
+    token1Decimals,
+    tickSpacing,
+    log
+  );
+  mctx.entities.poolsMap.set(pool.id, pool);
 };
 
-export const handleModifyLiquidity = (mctx: MappingContext, log: Log) => {
+export const handleModifyLiquidity = async (mctx: MappingContext, log: Log) => {
   let { id, liquidityDelta, salt, sender, tickLower, tickUpper } =
     poolManagerAbi.events.ModifyLiquidity.decode(log);
 
-  mctx.store.defer(Pool, getPoolId(id));
-  mctx.store.defer(Wallet, getWalletId(sender));
+  await updatePositionAndPool(
+    mctx,
+    log,
+    id,
+    liquidityDelta,
+    salt,
+    tickLower,
+    tickUpper
+  );
 
-  mctx.queue.add(async () => {
-    await updatePositionAndPool(
+  const walletId = getWalletId(sender);
+  let wallet = await getWalletFromMapOrDb(mctx.store, mctx.entities, walletId);
+  if (!wallet) {
+    wallet = createWallet(sender);
+    mctx.entities.walletsMap.set(walletId, wallet);
+  }
+
+  if (config.permissionRecordTx.modifyLiquidity) {
+    await createModifyLiquidityReccord(
       mctx,
-      log,
       id,
       liquidityDelta,
       salt,
+      walletId,
       tickLower,
-      tickUpper
+      tickUpper,
+      log
     );
-    const walletId = getWalletId(sender);
-    let wallet = await mctx.store.get(Wallet, walletId);
-    if (!wallet) {
-      wallet = createWallet(sender);
-      await mctx.store.insert(wallet);
-    }
-
-    if (config.permissionRecordTx.modifyLiquidity) {
-      await createModifyLiquidityReccord(
-        mctx,
-        id,
-        liquidityDelta,
-        salt,
-        walletId,
-        tickLower,
-        tickUpper,
-        log
-      );
-    }
-  });
+  }
 };
 
-export const handleSwap = (mctx: MappingContext, log: Log) => {
+export const handleSwap = async (mctx: MappingContext, log: Log) => {
   let { id, amount0, amount1, fee, liquidity, sender, sqrtPriceX96, tick } =
     poolManagerAbi.events.Swap.decode(log);
 
-  mctx.store.defer(Pool, getPoolId(id));
-  mctx.store.defer(PoolDayData, getPoolDayDataId(id, log.block.timestamp));
-  mctx.store.defer(PoolHourData, getPoolHourDataId(id, log.block.timestamp));
-  mctx.store.defer(Wallet, getWalletId(sender));
-  mctx.store.defer(PoolManager, getPoolManagerId());
+  await incrementTokensSwapCount(mctx, log, id);
+  if (config.permissionRecordTx.tokendaydata) {
+    await incrementTokensDayDataSwapCount(mctx, log, id);
+  }
+  if (config.permissionRecordTx.tokenhourdata) {
+    await incrementTokensHourDataSwapCount(mctx, log, id);
+  }
+  const { volumeUSDAdded, feeUSDAdded } = await updatePoolStates(
+    mctx,
+    log,
+    id,
+    tick,
+    liquidity,
+    sqrtPriceX96,
+    amount0,
+    amount1,
+    fee
+  );
 
-  mctx.queue.add(async () => {
-    await incrementTokensSwapCount(mctx, log, id);
-    if (config.permissionRecordTx.tokendaydata) {
-      await incrementTokensDayDataSwapCount(mctx, log, id);
-    }
-    if (config.permissionRecordTx.tokenhourdata) {
-      await incrementTokensHourDataSwapCount(mctx, log, id);
-    }
-    const { volumeUSDAdded, feeUSDAdded } = await updatePoolStates(
+  await addFeeVolumePoolManager(mctx, volumeUSDAdded, feeUSDAdded);
+  if (config.permissionRecordTx.pooldaydata) {
+    await updatePoolDayData(
       mctx,
       log,
       id,
-      tick,
       liquidity,
       sqrtPriceX96,
+      tick,
       amount0,
       amount1,
       fee
     );
+  }
+  if (config.permissionRecordTx.poolhourdata) {
+    await updatePoolHourData(
+      mctx,
+      log,
+      id,
+      liquidity,
+      sqrtPriceX96,
+      tick,
+      amount0,
+      amount1,
+      fee
+    );
+  }
 
-    await addFeeVolumePoolManager(mctx, volumeUSDAdded, feeUSDAdded);
-    if (config.permissionRecordTx.pooldaydata) {
-      await updatePoolDayData(
-        mctx,
-        log,
-        id,
-        liquidity,
-        sqrtPriceX96,
-        tick,
-        amount0,
-        amount1,
-        fee
-      );
+  if (id === config.bundleSourcePoolId) {
+    await updateBundlePrice(mctx);
+  }
+  const priceUpdate = await updateTokenPrice(mctx, id);
+  if (priceUpdate) {
+    if (config.permissionRecordTx.tokendaydata) {
+      await updateTokenDayData(mctx, log, priceUpdate);
     }
-    if (config.permissionRecordTx.poolhourdata) {
-      await updatePoolHourData(
-        mctx,
-        log,
-        id,
-        liquidity,
-        sqrtPriceX96,
-        tick,
-        amount0,
-        amount1,
-        fee
-      );
+    if (config.permissionRecordTx.tokenhourdata) {
+      await updateTokenHourData(mctx, log, priceUpdate);
     }
+  }
 
-    if (id === config.bundleSourcePoolId) {
-      await updateBundlePrice(mctx);
-    }
-    const priceUpdate = await updateTokenPrice(mctx, id);
-    if (priceUpdate) {
-      if (config.permissionRecordTx.tokendaydata) {
-        await updateTokenDayData(mctx, log, priceUpdate);
-      }
-      if (config.permissionRecordTx.tokenhourdata) {
-        await updateTokenHourData(mctx, log, priceUpdate);
-      }
-    }
+  const walletId = getWalletId(sender);
+  let wallet = await getWalletFromMapOrDb(mctx.store, mctx.entities, walletId);
+  if (!wallet) {
+    wallet = createWallet(sender);
+    mctx.entities.walletsMap.set(walletId, wallet);
+  }
 
-    const walletId = getWalletId(sender);
-    let wallet = await mctx.store.get(Wallet, walletId);
-    if (!wallet) {
-      wallet = createWallet(sender);
-      await mctx.store.insert(wallet);
-    }
-
-    if (config.permissionRecordTx.swap) {
-      await createSwapReccord(
-        mctx,
-        id,
-        walletId,
-        log,
-        amount0,
-        amount1,
-        fee,
-        liquidity,
-        sqrtPriceX96,
-        tick
-      );
-    }
-  });
+  if (config.permissionRecordTx.swap) {
+    await createSwapReccord(
+      mctx,
+      id,
+      walletId,
+      log,
+      amount0,
+      amount1,
+      fee,
+      liquidity,
+      sqrtPriceX96,
+      tick
+    );
+  }
 };
 
-export const handleDonate = (mctx: MappingContext, log: Log) => {
+export const handleDonate = async (mctx: MappingContext, log: Log) => {
   let { id, amount0, amount1, sender } =
     poolManagerAbi.events.Donate.decode(log);
 
-  mctx.store.defer(Wallet, getWalletId(sender));
+  const walletId = getWalletId(sender);
+  let wallet = await getWalletFromMapOrDb(mctx.store, mctx.entities, walletId);
+  if (!wallet) {
+    wallet = createWallet(sender);
+    mctx.entities.walletsMap.set(walletId, wallet);
+  }
 
-  mctx.queue.add(async () => {
-    const walletId = getWalletId(sender);
-    let wallet = await mctx.store.get(Wallet, walletId);
-    if (!wallet) {
-      wallet = createWallet(sender);
-      await mctx.store.insert(wallet);
-    }
-
-    if (config.permissionRecordTx.donate) {
-      await createDonateReccord(mctx, id, walletId, log, amount0, amount1);
-    }
-  });
+  if (config.permissionRecordTx.donate) {
+    await createDonateReccord(mctx, id, walletId, log, amount0, amount1);
+  }
 };

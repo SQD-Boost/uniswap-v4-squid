@@ -1,9 +1,6 @@
-import {
-  StoreWithCache,
-  TypeormDatabaseWithCache,
-} from "@belopash/typeorm-store";
+import { Store, TypeormDatabase } from "@subsquid/typeorm-store";
 import { ProcessorContext, makeProcessor } from "./processor";
-import { TaskQueue } from "./utils/queue";
+import { EntityManager } from "./utils/EntityManager";
 import { initializeBundle } from "./utils/entities/bundle";
 import * as nftPositionAbi from "./abi/nftPosition";
 import * as poolManagerAbi from "./abi/poolManager";
@@ -30,8 +27,8 @@ import assert from "assert";
 import { networksConfigs } from "./utils/constants/network.constant";
 import { loadPreloadedTokensMetadata } from "./utils/helpers/metadata.helper";
 
-export type MappingContext = ProcessorContext<StoreWithCache> & {
-  queue: TaskQueue;
+export type MappingContext = ProcessorContext<Store> & {
+  entities: EntityManager;
 };
 
 assert(
@@ -49,7 +46,7 @@ let preloadedTokensMetadata = loadPreloadedTokensMetadata(config.chainTag);
 
 const processor = makeProcessor(config);
 
-const database = new TypeormDatabaseWithCache({
+const database = new TypeormDatabase({
   supportHotBlocks: true,
   stateSchema: `${config.chainTag}_processor`,
   isolationLevel: "READ COMMITTED",
@@ -67,7 +64,6 @@ processor.run(database, async (ctx) => {
     await createNativeToken(ctx);
     await initializeTokens(ctx, preloadedTokensMetadata!);
     await createManager(ctx, config.nftPositionManager);
-    await ctx.store.flush();
 
     preloadedTokensMetadata = null;
     if (global.gc) {
@@ -79,7 +75,7 @@ processor.run(database, async (ctx) => {
 
   const mctx: MappingContext = {
     ...ctx,
-    queue: new TaskQueue(),
+    entities: new EntityManager(),
   };
 
   for (let block of mctx.blocks) {
@@ -88,20 +84,20 @@ processor.run(database, async (ctx) => {
         log.address === config.nftPositionManager &&
         log.topics[0] === nftPositionAbi.events.Transfer.topic
       ) {
-        handleTransferPosition(mctx, log);
+        await handleTransferPosition(mctx, log);
       } else if (log.address === config.poolManager) {
         switch (log.topics[0]) {
           case poolManagerAbi.events.Initialize.topic:
-            handleInitialize(mctx, log);
+            await handleInitialize(mctx, log);
             break;
           case poolManagerAbi.events.ModifyLiquidity.topic:
-            handleModifyLiquidity(mctx, log);
+            await handleModifyLiquidity(mctx, log);
             break;
           case poolManagerAbi.events.Swap.topic:
-            handleSwap(mctx, log);
+            await handleSwap(mctx, log);
             break;
           case poolManagerAbi.events.Donate.topic:
-            handleDonate(mctx, log);
+            await handleDonate(mctx, log);
             break;
           default:
             break;
@@ -110,35 +106,31 @@ processor.run(database, async (ctx) => {
     }
   }
 
-  mctx.queue.add(async () => {
-    await sumPoolAndCountPoolManager(mctx);
-  });
+  await sumPoolAndCountPoolManager(mctx);
+
+  await mctx.entities.upsertAll(mctx.store);
 
   if (mctx.isHead) {
-    mctx.queue.add(async () => {
-      if (!hasUpdatedPositions) {
-        await updateAllPositionsOnce(mctx);
-        console.log("Update all positions");
+    if (!hasUpdatedPositions) {
+      await updateAllPositionsOnce(mctx);
+      console.log("Update all positions");
 
-        hasUpdatedPositions = true;
-      }
-      await updateAllPositionsSwapped(mctx);
+      hasUpdatedPositions = true;
+    }
+    await updateAllPositionsSwapped(mctx);
 
-      const lastBlock = mctx.blocks[mctx.blocks.length - 1].header.height;
+    const lastBlock = mctx.blocks[mctx.blocks.length - 1].header.height;
 
-      if (lastBlock - lastTvlUpdateBlock >= config.blockIntervals.poolsTvlUSD) {
-        await updateAllPoolsTvlUSD(mctx);
-        lastTvlUpdateBlock = lastBlock;
-      }
-      if (
-        lastBlock - coreTotalUSDUpdateBlock >=
-        config.blockIntervals.coreTotalUSD
-      ) {
-        await updateAllPositionsCoreTotalUSD(mctx);
-        coreTotalUSDUpdateBlock = lastBlock;
-      }
-    });
+    if (lastBlock - lastTvlUpdateBlock >= config.blockIntervals.poolsTvlUSD) {
+      await updateAllPoolsTvlUSD(mctx);
+      lastTvlUpdateBlock = lastBlock;
+    }
+    if (
+      lastBlock - coreTotalUSDUpdateBlock >=
+      config.blockIntervals.coreTotalUSD
+    ) {
+      await updateAllPositionsCoreTotalUSD(mctx);
+      coreTotalUSDUpdateBlock = lastBlock;
+    }
   }
-
-  await mctx.queue.run();
 });

@@ -19,6 +19,7 @@ import {
   getAmount1,
 } from "../helpers/global.helper";
 import { getManagerId, getPoolId, getPositionId } from "../helpers/ids.helper";
+import { getPoolFromMapOrDb, getPositionFromMapOrDb } from "../EntityManager";
 
 export const createPositionUpdateOwner = (log: Log, nftId: bigint) => {
   const positionId = getPositionId(log.address, nftId);
@@ -34,6 +35,7 @@ export const createPositionUpdateOwner = (log: Log, nftId: bigint) => {
     amount1: ZERO_BI,
     amount1D: ZERO_STRING,
     coreTotalUSD: 0,
+    ratio: 0,
     managerId: getManagerId(log.address),
     chainId: config.chainId,
     blockNumber: BigInt(log.block.height),
@@ -59,7 +61,8 @@ export const updatePositionAndPool = async (
     return;
   }
 
-  let pool = await mctx.store.get(Pool, poolId);
+  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
+
   if (pool) {
     if (
       pool.currentTick !== null &&
@@ -93,15 +96,14 @@ export const updatePositionAndPool = async (
     if (pool.liquidity === ZERO_BI) {
       pool.tvlUSD = 0;
     }
-
-    await mctx.store.upsert(pool);
   }
 
-  let position = await mctx.store.get(Position, positionId);
+  let position = await getPositionFromMapOrDb(
+    mctx.store,
+    mctx.entities,
+    positionId
+  );
   if (!position) {
-    // console.log(
-    //   `updatePositionAndPool : position ${positionId} not found hash : ${log.transaction?.hash}`
-    // );
     return;
   }
 
@@ -153,7 +155,6 @@ export const updatePositionAndPool = async (
 
   position.blockNumber = BigInt(log.block.height);
   position.timestamp = BigInt(log.block.timestamp);
-  await mctx.store.upsert(position);
 };
 
 export const getPositionRatio = (

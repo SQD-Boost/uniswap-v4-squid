@@ -1,17 +1,22 @@
 import * as erc20Abi from "../../abi/ERC20";
 import * as ERC20NameBytesAbi from "../../abi/ERC20NameBytes";
 import * as ERC20SymbolBytes from "../../abi/ERC20SymbolBytes";
-import { Bundle, Pool, Token } from "../../model";
+import { Token } from "../../model";
 import { config, MappingContext } from "../../main";
 import { ONE_BI, ZERO_ADDRESS } from "../constants/global.contant";
 import { DataHandlerContext } from "@subsquid/evm-processor";
-import { StoreWithCache } from "@belopash/typeorm-store";
+import { Store } from "@subsquid/typeorm-store";
 import { hexToString, sanitizeString } from "../helpers/global.helper";
 import { In } from "typeorm";
 import { getBundleId, getPoolId, getTokenId } from "../helpers/ids.helper";
 import { ZERO_BI } from "../constants/global.contant";
 import { Log, ProcessorContext } from "../../processor";
 import { Metadata } from "../types/global.type";
+import {
+  getPoolFromMapOrDb,
+  getTokenFromMapOrDb,
+  getBundleFromMapOrDb,
+} from "../EntityManager";
 
 export const createToken = async (mctx: MappingContext, currency: string) => {
   const latestBlock = mctx.blocks[mctx.blocks.length - 1];
@@ -79,7 +84,7 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
 };
 
 export const createNativeToken = async (
-  ctx: DataHandlerContext<StoreWithCache, {}>
+  ctx: DataHandlerContext<Store, {}>
 ) => {
   const tokenId = getTokenId(ZERO_ADDRESS);
   let token = await ctx.store.get(Token, tokenId);
@@ -102,7 +107,7 @@ export const createNativeToken = async (
 };
 
 export const initializeTokens = async (
-  ctx: ProcessorContext<StoreWithCache>,
+  ctx: ProcessorContext<Store>,
   preloadedTokensMetadata: Metadata
 ) => {
   const CHUNK_SIZE = 10000;
@@ -158,26 +163,29 @@ export const incrementTokensSwapCount = async (
   id: string
 ) => {
   let poolId = getPoolId(id);
-  let pool = await mctx.store.get(Pool, poolId);
+  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`updatePoolStates : Pool ${poolId} not found`);
+    console.log(`incrementTokensSwapCount: Pool ${poolId} not found`);
     return;
   }
 
-  const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
-  const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
+  let token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
+  let token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
+
+  if (!token0 || !token1) {
+    console.log(`incrementTokensSwapCount: Token not found for pool ${poolId}`);
+    return;
+  }
 
   token0.swapCount += ONE_BI;
   token1.swapCount += ONE_BI;
-
-  await mctx.store.upsert([token0, token1]);
 };
 
 export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
   let poolId = getPoolId(id);
-  let pool = await mctx.store.get(Pool, poolId);
+  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`updatePoolStates : Pool ${poolId} not found`);
+    console.log(`updateTokenPrice: Pool ${poolId} not found`);
     return null;
   }
 
@@ -199,9 +207,12 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
   );
 
   const updatePrice = async (tokenId: string, price: number) => {
-    const token = await mctx.store.getOrFail(Token, tokenId);
+    const token = await getTokenFromMapOrDb(mctx.store, mctx.entities, tokenId);
+    if (!token) {
+      console.log(`updateTokenPrice: Token ${tokenId} not found`);
+      return null;
+    }
     token.price = price;
-    await mctx.store.upsert(token);
     return { tokenId, price };
   };
 
@@ -210,7 +221,11 @@ export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
   } else if (isToken1Stable) {
     return await updatePrice(pool.token0Id, pool.price1);
   } else {
-    const bundle = await mctx.store.getOrFail(Bundle, getBundleId());
+    const bundle = await getBundleFromMapOrDb(mctx.store, mctx.entities, getBundleId());
+    if (!bundle) {
+      console.log(`updateTokenPrice: Bundle not found`);
+      return null;
+    }
     if (isToken0Base) {
       return await updatePrice(
         pool.token1Id,

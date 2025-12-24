@@ -1,9 +1,13 @@
-import { Pool, TokenDayData } from "../../model";
+import { TokenDayData } from "../../model";
 import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { ONE_BI, ZERO_BI } from "../constants/global.contant";
 import { DAY_MS, getDayIndex } from "../helpers/global.helper";
 import { getPoolId, getTokenDayDataId } from "../helpers/ids.helper";
+import {
+  getPoolFromMapOrDb,
+  getTokenDayDataFromMapOrDb,
+} from "../EntityManager";
 
 export const createTokenDayData = (
   tokenDayDataId: string,
@@ -31,35 +35,35 @@ export const incrementTokensDayDataSwapCount = async (
   id: string
 ) => {
   let poolId = getPoolId(id);
-  let pool = await mctx.store.get(Pool, poolId);
+  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`updatePoolStates : Pool ${poolId} not found`);
+    console.log(`incrementTokensDayDataSwapCount: Pool ${poolId} not found`);
     return;
   }
 
   let token0DayDataId = getTokenDayDataId(pool.token0Id, log.block.timestamp);
   let token1DayDataId = getTokenDayDataId(pool.token1Id, log.block.timestamp);
 
-  let token0DayData = await mctx.store.get(TokenDayData, token0DayDataId);
+  let token0DayData = await getTokenDayDataFromMapOrDb(mctx.store, mctx.entities, token0DayDataId);
   if (!token0DayData) {
     token0DayData = createTokenDayData(
       token0DayDataId,
       pool.token0Id,
       log.block.timestamp
     );
+    mctx.entities.tokenDayDatasMap.set(token0DayDataId, token0DayData);
   }
-  let token1DayData = await mctx.store.get(TokenDayData, token1DayDataId);
+  let token1DayData = await getTokenDayDataFromMapOrDb(mctx.store, mctx.entities, token1DayDataId);
   if (!token1DayData) {
     token1DayData = createTokenDayData(
       token1DayDataId,
       pool.token1Id,
       log.block.timestamp
     );
+    mctx.entities.tokenDayDatasMap.set(token1DayDataId, token1DayData);
   }
   token0DayData.swapCount += ONE_BI;
   token1DayData.swapCount += ONE_BI;
-
-  await mctx.store.upsert([token0DayData, token1DayData]);
 };
 
 export const updateTokenDayData = async (
@@ -75,7 +79,11 @@ export const updateTokenDayData = async (
     log.block.timestamp
   );
 
-  let tokenDayData = await mctx.store.getOrFail(TokenDayData, tokenDayDataId);
+  let tokenDayData = await getTokenDayDataFromMapOrDb(mctx.store, mctx.entities, tokenDayDataId);
+  if (!tokenDayData) {
+    console.log(`updateTokenDayData: TokenDayData ${tokenDayDataId} not found`);
+    return;
+  }
   if (tokenDayData.open === -1) {
     tokenDayData.open = priceUpdate.price;
     tokenDayData.high = priceUpdate.price;
@@ -86,5 +94,4 @@ export const updateTokenDayData = async (
     tokenDayData.low = Math.min(tokenDayData.low, priceUpdate.price);
     tokenDayData.close = priceUpdate.price;
   }
-  await mctx.store.upsert(tokenDayData);
 };

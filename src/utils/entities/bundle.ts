@@ -2,11 +2,11 @@ import { Bundle, Pool } from "../../model";
 import { getBundleId, getPoolId } from "../helpers/ids.helper";
 
 import { DataHandlerContext } from "@subsquid/evm-processor";
-import { StoreWithCache } from "@belopash/typeorm-store";
+import { Store } from "@subsquid/typeorm-store";
 import { config, MappingContext } from "../../main";
 
 export const initializeBundle = async (
-  ctx: DataHandlerContext<StoreWithCache, {}>
+  ctx: DataHandlerContext<Store, {}>
 ) => {
   const bundleId = getBundleId();
   let bundle = await ctx.store.get(Bundle, bundleId);

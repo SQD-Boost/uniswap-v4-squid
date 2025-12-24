@@ -1,11 +1,11 @@
 import { DataHandlerContext } from "@subsquid/evm-processor";
-import { StoreWithCache } from "@belopash/typeorm-store";
+import { Store } from "@subsquid/typeorm-store";
 import { getManagerId } from "../helpers/ids.helper";
 import { Manager } from "../../model";
 import { config } from "../../main";
 
 export const createManager = async (
-  ctx: DataHandlerContext<StoreWithCache, {}>,
+  ctx: DataHandlerContext<Store, {}>,
   managerAddress: string
 ) => {
   const managerId = getManagerId(managerAddress);

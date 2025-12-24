@@ -1,4 +1,4 @@
-import { Pool, PoolDayData, Token } from "../../model";
+import { PoolDayData } from "../../model";
 import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {
@@ -16,6 +16,11 @@ import {
   getPricesFromSqrtPriceX96,
 } from "../helpers/global.helper";
 import { getPoolDayDataId, getPoolId } from "../helpers/ids.helper";
+import {
+  getPoolFromMapOrDb,
+  getTokenFromMapOrDb,
+  getPoolDayDataFromMapOrDb,
+} from "../EntityManager";
 
 export const createPoolDayData = (
   poolDayDataId: string,
@@ -57,13 +62,13 @@ export const updatePreviousDayVolumePercentageChange = async (
 ) => {
   const previousDayTimestamp = timestamp - DAY_SECONDS_MILI;
   const previousDayDataId = getPoolDayDataId(id, previousDayTimestamp);
-  const previousDayData = await mctx.store.get(PoolDayData, previousDayDataId);
+  const previousDayData = await getPoolDayDataFromMapOrDb(mctx.store, mctx.entities, previousDayDataId);
 
   if (previousDayData) {
     const twoDaysAgoTimestamp = timestamp - 3 * DAY_SECONDS_MILI;
     const twoDaysAgoDataId = getPoolDayDataId(id, twoDaysAgoTimestamp);
 
-    const twoDaysAgoData = await mctx.store.get(PoolDayData, twoDaysAgoDataId);
+    const twoDaysAgoData = await getPoolDayDataFromMapOrDb(mctx.store, mctx.entities, twoDaysAgoDataId);
 
     if (twoDaysAgoData && twoDaysAgoData.volumeUSD > 0) {
       const previousDayPercentageChange =
@@ -89,7 +94,11 @@ export const updatePoolDayData = async (
   fee: number
 ) => {
   let poolId = getPoolId(id);
-  let pool = await mctx.store.getOrFail(Pool, poolId);
+  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
+  if (!pool) {
+    console.log(`updatePoolDayData: Pool ${poolId} not found`);
+    return;
+  }
 
   const { token0Price } = getPricesFromSqrtPriceX96(
     sqrtPriceX96,
@@ -98,7 +107,7 @@ export const updatePoolDayData = async (
   );
 
   let poolDayDataId = getPoolDayDataId(id, log.block.timestamp);
-  let poolDayData = await mctx.store.get(PoolDayData, poolDayDataId);
+  let poolDayData = await getPoolDayDataFromMapOrDb(mctx.store, mctx.entities, poolDayDataId);
   if (!poolDayData) {
     poolDayData = createPoolDayData(
       poolDayDataId,
@@ -106,6 +115,7 @@ export const updatePoolDayData = async (
       log.block.timestamp,
       token0Price
     );
+    mctx.entities.poolDayDatasMap.set(poolDayDataId, poolDayData);
 
     await updatePreviousDayVolumePercentageChange(
       mctx,
@@ -136,7 +146,11 @@ export const updatePoolDayData = async (
   let fee1USD = 0;
 
   if (swappedAmount0 > ZERO_BI) {
-    const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
+    const token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
+    if (!token0) {
+      console.log(`updatePoolDayData: Token ${pool.token0Id} not found`);
+      return;
+    }
 
     fee0 =
       BigInt(fee) === BASE_FEE
@@ -155,7 +169,11 @@ export const updatePoolDayData = async (
     fee0USD =
       Number(convertTokenToDecimal(fee0, pool.token0Decimals)) * token0.price;
   } else if (swappedAmount1 > ZERO_BI) {
-    const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
+    const token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
+    if (!token1) {
+      console.log(`updatePoolDayData: Token ${pool.token1Id} not found`);
+      return;
+    }
 
     fee1 =
       BigInt(fee) === BASE_FEE
@@ -182,6 +200,4 @@ export const updatePoolDayData = async (
 
   poolDayData.volumeUSD += volumeUSDAdded;
   poolDayData.collectedFeesUSD += feeUSDAdded;
-
-  await mctx.store.upsert(poolDayData);
 };

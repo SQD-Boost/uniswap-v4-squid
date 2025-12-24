@@ -1,13 +1,14 @@
 import { DataHandlerContext } from "@subsquid/evm-processor";
-import { StoreWithCache } from "@belopash/typeorm-store";
+import { Store } from "@subsquid/typeorm-store";
 import { getPoolManagerId } from "../helpers/ids.helper";
 import { PoolManager } from "../../model";
 import { ZERO_BI } from "../constants/global.contant";
 import { config, MappingContext } from "../../main";
 import * as poolManagerAbi from "../../abi/poolManager";
+import { getPoolManagerFromMapOrDb } from "../EntityManager";
 
 export const initializePoolManager = async (
-  ctx: DataHandlerContext<StoreWithCache, {}>
+  ctx: DataHandlerContext<Store, {}>
 ) => {
   const poolManagerId = getPoolManagerId();
   let poolManager = await ctx.store.get(PoolManager, poolManagerId);
@@ -44,12 +45,15 @@ export const sumPoolAndCountPoolManager = async (mctx: MappingContext) => {
     )
   ).length;
 
-  let poolManager = await mctx.store.getOrFail(PoolManager, getPoolManagerId());
+  const poolManagerId = getPoolManagerId();
+  let poolManager = await getPoolManagerFromMapOrDb(mctx.store, mctx.entities, poolManagerId);
+  if (!poolManager) {
+    console.log(`sumPoolAndCountPoolManager: PoolManager ${poolManagerId} not found`);
+    return;
+  }
 
   poolManager.poolCount += poolCount;
   poolManager.swapCount += BigInt(swapCount);
-
-  await mctx.store.upsert(poolManager);
 };
 
 export const addFeeVolumePoolManager = async (
@@ -57,10 +61,13 @@ export const addFeeVolumePoolManager = async (
   volumeUSDAdded: number,
   feeUSDAdded: number
 ) => {
-  let poolManager = await mctx.store.getOrFail(PoolManager, getPoolManagerId());
+  const poolManagerId = getPoolManagerId();
+  let poolManager = await getPoolManagerFromMapOrDb(mctx.store, mctx.entities, poolManagerId);
+  if (!poolManager) {
+    console.log(`addFeeVolumePoolManager: PoolManager ${poolManagerId} not found`);
+    return;
+  }
 
   poolManager.totalVolumeUSD += volumeUSDAdded;
   poolManager.totalFeesUSD += feeUSDAdded;
-
-  await mctx.store.upsert(poolManager);
 };

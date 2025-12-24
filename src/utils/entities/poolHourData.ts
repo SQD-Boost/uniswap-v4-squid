@@ -1,4 +1,4 @@
-import { Pool, PoolHourData, Token } from "../../model";
+import { PoolHourData } from "../../model";
 import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {
@@ -15,6 +15,11 @@ import {
   HOUR_MS,
 } from "../helpers/global.helper";
 import { getPoolHourDataId, getPoolId } from "../helpers/ids.helper";
+import {
+  getPoolFromMapOrDb,
+  getTokenFromMapOrDb,
+  getPoolHourDataFromMapOrDb,
+} from "../EntityManager";
 
 export const createPoolHourData = (
   poolHourDataId: string,
@@ -56,16 +61,18 @@ export const updatePreviousHourVolumePercentageChange = async (
 ) => {
   const previousHourTimestamp = timestamp - HOUR_MS;
   const previousHourDataId = getPoolHourDataId(id, previousHourTimestamp);
-  const previousHourData = await mctx.store.get(
-    PoolHourData,
+  const previousHourData = await getPoolHourDataFromMapOrDb(
+    mctx.store,
+    mctx.entities,
     previousHourDataId
   );
 
   if (previousHourData) {
     const twoHoursAgoTimestamp = timestamp - 2 * HOUR_MS;
     const twoHoursAgoDataId = getPoolHourDataId(id, twoHoursAgoTimestamp);
-    const twoHoursAgoData = await mctx.store.get(
-      PoolHourData,
+    const twoHoursAgoData = await getPoolHourDataFromMapOrDb(
+      mctx.store,
+      mctx.entities,
       twoHoursAgoDataId
     );
 
@@ -93,7 +100,11 @@ export const updatePoolHourData = async (
   fee: number
 ) => {
   let poolId = getPoolId(id);
-  let pool = await mctx.store.getOrFail(Pool, poolId);
+  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
+  if (!pool) {
+    console.log(`updatePoolHourData: Pool ${poolId} not found`);
+    return;
+  }
 
   const { token0Price } = getPricesFromSqrtPriceX96(
     sqrtPriceX96,
@@ -102,7 +113,7 @@ export const updatePoolHourData = async (
   );
 
   let poolHourDataId = getPoolHourDataId(id, log.block.timestamp);
-  let poolHourData = await mctx.store.get(PoolHourData, poolHourDataId);
+  let poolHourData = await getPoolHourDataFromMapOrDb(mctx.store, mctx.entities, poolHourDataId);
   if (!poolHourData) {
     poolHourData = createPoolHourData(
       poolHourDataId,
@@ -110,6 +121,7 @@ export const updatePoolHourData = async (
       log.block.timestamp,
       token0Price
     );
+    mctx.entities.poolHourDatasMap.set(poolHourDataId, poolHourData);
 
     await updatePreviousHourVolumePercentageChange(
       mctx,
@@ -140,7 +152,11 @@ export const updatePoolHourData = async (
   let fee1USD = 0;
 
   if (swappedAmount0 > ZERO_BI) {
-    const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
+    const token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
+    if (!token0) {
+      console.log(`updatePoolHourData: Token ${pool.token0Id} not found`);
+      return;
+    }
 
     fee0 =
       BigInt(fee) === BASE_FEE
@@ -158,7 +174,11 @@ export const updatePoolHourData = async (
     fee0USD =
       Number(convertTokenToDecimal(fee0, pool.token0Decimals)) * token0.price;
   } else if (swappedAmount1 > ZERO_BI) {
-    const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
+    const token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
+    if (!token1) {
+      console.log(`updatePoolHourData: Token ${pool.token1Id} not found`);
+      return;
+    }
 
     fee1 =
       BigInt(fee) === BASE_FEE
@@ -184,6 +204,4 @@ export const updatePoolHourData = async (
 
   poolHourData.volumeUSD += volumeUSDAdded;
   poolHourData.collectedFeesUSD += feeUSDAdded;
-
-  await mctx.store.upsert(poolHourData);
 };

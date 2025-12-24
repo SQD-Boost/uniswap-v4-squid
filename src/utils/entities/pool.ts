@@ -15,6 +15,7 @@ import {
   getPricesFromSqrtPriceX96,
 } from "../helpers/global.helper";
 import { MoreThan } from "typeorm";
+import { getPoolFromMapOrDb, getTokenFromMapOrDb } from "../EntityManager";
 
 export const createPool = (
   poolAddress: string,
@@ -83,9 +84,9 @@ export const updatePoolStates = async (
   fee: number
 ): Promise<{ volumeUSDAdded: number; feeUSDAdded: number }> => {
   let poolId = getPoolId(id);
-  let pool = await mctx.store.get(Pool, poolId);
+  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
   if (!pool) {
-    console.log(`updatePoolStates : Pool ${poolId} not found`);
+    console.log(`updatePoolStates: Pool ${poolId} not found`);
     return { volumeUSDAdded: 0, feeUSDAdded: 0 };
   }
 
@@ -109,17 +110,6 @@ export const updatePoolStates = async (
   const swappedAmount0 = amount0 * MINUS_ONE_BI;
   const swappedAmount1 = amount1 * MINUS_ONE_BI;
 
-  // let amount0WithFee = swappedAmount0;
-  // let amount1WithFee = swappedAmount1;
-
-  // if (swappedAmount0 > BigInt(0)) {
-  //   const fee0 = (swappedAmount0 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
-  //   amount0WithFee = swappedAmount0 - fee0;
-  // } else if (swappedAmount1 > BigInt(0)) {
-  //   const fee1 = (swappedAmount1 * BigInt(fee)) / (BASE_FEE - BigInt(fee));
-  //   amount1WithFee = swappedAmount1 - fee1;
-  // }
-
   let fee0 = ZERO_BI;
   let fee1 = ZERO_BI;
 
@@ -130,7 +120,11 @@ export const updatePoolStates = async (
   let fee1USD = 0;
 
   if (swappedAmount0 > ZERO_BI) {
-    const token0 = await mctx.store.getOrFail(Token, pool.token0Id);
+    const token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
+    if (!token0) {
+      console.log(`updatePoolStates: Token ${pool.token0Id} not found`);
+      return { volumeUSDAdded: 0, feeUSDAdded: 0 };
+    }
 
     fee0 =
       BigInt(fee) === BASE_FEE
@@ -148,7 +142,11 @@ export const updatePoolStates = async (
     fee0USD =
       Number(convertTokenToDecimal(fee0, pool.token0Decimals)) * token0.price;
   } else if (swappedAmount1 > ZERO_BI) {
-    const token1 = await mctx.store.getOrFail(Token, pool.token1Id);
+    const token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
+    if (!token1) {
+      console.log(`updatePoolStates: Token ${pool.token1Id} not found`);
+      return { volumeUSDAdded: 0, feeUSDAdded: 0 };
+    }
 
     fee1 =
       BigInt(fee) === BASE_FEE
@@ -193,8 +191,6 @@ export const updatePoolStates = async (
 
   pool.blockNumber = BigInt(log.block.height);
   pool.timestamp = BigInt(log.block.timestamp);
-
-  await mctx.store.upsert(pool);
 
   return {
     volumeUSDAdded,
