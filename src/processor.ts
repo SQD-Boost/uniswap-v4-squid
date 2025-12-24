@@ -11,7 +11,7 @@ import {
 } from "@subsquid/evm-processor";
 import * as poolManagerAbi from "./abi/poolManager";
 import * as nftPositionAbi from "./abi/nftPosition";
-import { NetworkConfig } from "./utils/constants/network.constant";
+import { NetworkConfig } from "./utils/types/global.type";
 
 const fields = {
   log: {
