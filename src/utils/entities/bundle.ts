@@ -1,9 +1,10 @@
 import { Bundle, Pool } from "../../model";
-import { getBundleId, getPoolId } from "../helpers/ids.helper";
+import { getBundleId } from "../helpers/ids.helper";
 
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { Store } from "@subsquid/typeorm-store";
 import { config, MappingContext } from "../../main";
+import { getBundleFromMapOrDb } from "../EntityManager";
 
 export const initializeBundle = async (
   ctx: DataHandlerContext<Store, {}>
@@ -22,23 +23,16 @@ export const initializeBundle = async (
   return bundle;
 };
 
-export const updateBundlePrice = async (mctx: MappingContext) => {
-  const bundleSourcePool = await mctx.store.get(
-    Pool,
-    getPoolId(config.bundleSourcePoolId)
+export const updateBundlePrice = async (mctx: MappingContext, pool: Pool) => {
+  const bundle = await getBundleFromMapOrDb(
+    mctx.store,
+    mctx.entities,
+    getBundleId()
   );
-  if (!bundleSourcePool) {
-    mctx.log.warn(`Bundle source pool not found: ${config.bundleSourcePoolId}`);
+  if (!bundle) {
+    mctx.log.warn(`Bundle not found`);
     return;
   }
 
-  await mctx.store.upsert(
-    new Bundle({
-      id: getBundleId(),
-      nativePriceUSD: config.isNativeToken0
-        ? bundleSourcePool.price1
-        : bundleSourcePool.price0,
-      chainId: config.chainId,
-    })
-  );
+  bundle.nativePriceUSD = config.isNativeToken0 ? pool.price1 : pool.price0;
 };

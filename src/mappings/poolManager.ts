@@ -209,7 +209,7 @@ export const handleSwap = async (mctx: MappingContext, log: Log) => {
   }
 
   if (id === config.bundleSourcePoolId) {
-    await updateBundlePrice(mctx);
+    await updateBundlePrice(mctx, pool);
   }
   const priceUpdate = await updateTokenPrice(mctx, pool);
   if (priceUpdate) {
