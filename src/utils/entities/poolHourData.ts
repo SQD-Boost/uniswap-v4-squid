@@ -1,4 +1,4 @@
-import { PoolHourData } from "../../model";
+import { Pool, PoolHourData } from "../../model";
 import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {
@@ -14,9 +14,8 @@ import {
   getPricesFromSqrtPriceX96,
   HOUR_MS,
 } from "../helpers/global.helper";
-import { getPoolHourDataId, getPoolId } from "../helpers/ids.helper";
+import { getPoolHourDataId } from "../helpers/ids.helper";
 import {
-  getPoolFromMapOrDb,
   getTokenFromMapOrDb,
   getPoolHourDataFromMapOrDb,
 } from "../EntityManager";
@@ -91,7 +90,7 @@ export const updatePreviousHourVolumePercentageChange = async (
 export const updatePoolHourData = async (
   mctx: MappingContext,
   log: Log,
-  id: string,
+  pool: Pool,
   liquidity: bigint,
   sqrtPriceX96: bigint,
   tick: number,
@@ -99,25 +98,18 @@ export const updatePoolHourData = async (
   amount1: bigint,
   fee: number
 ) => {
-  let poolId = getPoolId(id);
-  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
-  if (!pool) {
-    mctx.log.warn(`updatePoolHourData: Pool ${poolId} not found`);
-    return;
-  }
-
   const { token0Price } = getPricesFromSqrtPriceX96(
     sqrtPriceX96,
     pool.token0Decimals,
     pool.token1Decimals
   );
 
-  let poolHourDataId = getPoolHourDataId(id, log.block.timestamp);
+  let poolHourDataId = getPoolHourDataId(pool.poolAddress, log.block.timestamp);
   let poolHourData = await getPoolHourDataFromMapOrDb(mctx.store, mctx.entities, poolHourDataId);
   if (!poolHourData) {
     poolHourData = createPoolHourData(
       poolHourDataId,
-      poolId,
+      pool.id,
       log.block.timestamp,
       token0Price
     );
@@ -125,7 +117,7 @@ export const updatePoolHourData = async (
 
     await updatePreviousHourVolumePercentageChange(
       mctx,
-      id,
+      pool.poolAddress,
       log.block.timestamp
     );
   }

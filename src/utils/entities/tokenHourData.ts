@@ -1,13 +1,10 @@
 import { config, MappingContext } from "../../main";
-import { TokenHourData } from "../../model";
+import { Pool, TokenHourData } from "../../model";
 import { Log } from "../../processor";
 import { ONE_BI, ZERO_BI } from "../constants/global.contant";
 import { getHourIndex, HOUR_MS } from "../helpers/global.helper";
-import { getPoolId, getTokenHourDataId } from "../helpers/ids.helper";
-import {
-  getPoolFromMapOrDb,
-  getTokenHourDataFromMapOrDb,
-} from "../EntityManager";
+import { getTokenHourDataId } from "../helpers/ids.helper";
+import { getTokenHourDataFromMapOrDb } from "../EntityManager";
 
 export const createTokenHourData = (
   tokenHourDataId: string,
@@ -32,15 +29,8 @@ export const createTokenHourData = (
 export const incrementTokensHourDataSwapCount = async (
   mctx: MappingContext,
   log: Log,
-  id: string
+  pool: Pool
 ) => {
-  let poolId = getPoolId(id);
-  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
-  if (!pool) {
-    mctx.log.warn(`incrementTokensHourDataSwapCount: Pool ${poolId} not found`);
-    return;
-  }
-
   let token0HourDataId = getTokenHourDataId(pool.token0Id, log.block.timestamp);
   let token1HourDataId = getTokenHourDataId(pool.token1Id, log.block.timestamp);
 

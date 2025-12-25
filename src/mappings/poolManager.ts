@@ -12,6 +12,7 @@ import {
   getTokenId,
   getWalletId,
 } from "../utils/helpers/ids.helper";
+import { getPoolFromMapOrDb } from "../utils/EntityManager";
 import { createHook } from "../utils/entities/hook";
 import { createPool, updatePoolStates } from "../utils/entities/pool";
 import { getPricesFromSqrtPriceX96 } from "../utils/helpers/global.helper";
@@ -139,17 +140,24 @@ export const handleSwap = async (mctx: MappingContext, log: Log) => {
   let { id, amount0, amount1, fee, liquidity, sender, sqrtPriceX96, tick } =
     poolManagerAbi.events.Swap.decode(log);
 
-  await incrementTokensSwapCount(mctx, log, id);
+  const poolId = getPoolId(id);
+  const pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
+  if (!pool) {
+    mctx.log.warn(`handleSwap: Pool ${poolId} not found`);
+    return;
+  }
+
+  await incrementTokensSwapCount(mctx, pool);
   if (config.permissionRecordTx.tokendaydata) {
-    await incrementTokensDayDataSwapCount(mctx, log, id);
+    await incrementTokensDayDataSwapCount(mctx, log, pool);
   }
   if (config.permissionRecordTx.tokenhourdata) {
-    await incrementTokensHourDataSwapCount(mctx, log, id);
+    await incrementTokensHourDataSwapCount(mctx, log, pool);
   }
   const { volumeUSDAdded, feeUSDAdded } = await updatePoolStates(
     mctx,
     log,
-    id,
+    pool,
     tick,
     liquidity,
     sqrtPriceX96,
@@ -163,7 +171,7 @@ export const handleSwap = async (mctx: MappingContext, log: Log) => {
     await updatePoolDayData(
       mctx,
       log,
-      id,
+      pool,
       liquidity,
       sqrtPriceX96,
       tick,
@@ -176,7 +184,7 @@ export const handleSwap = async (mctx: MappingContext, log: Log) => {
     await updatePoolHourData(
       mctx,
       log,
-      id,
+      pool,
       liquidity,
       sqrtPriceX96,
       tick,
@@ -189,7 +197,7 @@ export const handleSwap = async (mctx: MappingContext, log: Log) => {
   if (id === config.bundleSourcePoolId) {
     await updateBundlePrice(mctx);
   }
-  const priceUpdate = await updateTokenPrice(mctx, id);
+  const priceUpdate = await updateTokenPrice(mctx, pool);
   if (priceUpdate) {
     if (config.permissionRecordTx.tokendaydata) {
       await updateTokenDayData(mctx, log, priceUpdate);

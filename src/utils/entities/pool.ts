@@ -15,7 +15,7 @@ import {
   getPricesFromSqrtPriceX96,
 } from "../helpers/global.helper";
 import { MoreThan } from "typeorm";
-import { getPoolFromMapOrDb, getTokenFromMapOrDb } from "../EntityManager";
+import { getTokenFromMapOrDb } from "../EntityManager";
 
 export const createPool = (
   poolAddress: string,
@@ -75,7 +75,7 @@ export const createPool = (
 export const updatePoolStates = async (
   mctx: MappingContext,
   log: Log,
-  id: string,
+  pool: Pool,
   tick: number,
   liquidity: bigint,
   sqrtPriceX96: bigint,
@@ -83,13 +83,6 @@ export const updatePoolStates = async (
   amount1: bigint,
   fee: number
 ): Promise<{ volumeUSDAdded: number; feeUSDAdded: number }> => {
-  let poolId = getPoolId(id);
-  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
-  if (!pool) {
-    mctx.log.warn(`updatePoolStates: Pool ${poolId} not found`);
-    return { volumeUSDAdded: 0, feeUSDAdded: 0 };
-  }
-
   if (mctx.isHead) {
     if (
       pool.batchBlockMaximumTick === IMPOSSIBLE_TICK &&

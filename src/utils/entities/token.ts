@@ -8,15 +8,15 @@ import { DataHandlerContext } from "@subsquid/evm-processor";
 import { Store } from "@subsquid/typeorm-store";
 import { hexToString, sanitizeString } from "../helpers/global.helper";
 import { In } from "typeorm";
-import { getBundleId, getPoolId, getTokenId } from "../helpers/ids.helper";
+import { getBundleId, getTokenId } from "../helpers/ids.helper";
 import { ZERO_BI } from "../constants/global.contant";
-import { Log, ProcessorContext } from "../../processor";
+import { ProcessorContext } from "../../processor";
 import { Metadata } from "../types/global.type";
 import {
-  getPoolFromMapOrDb,
   getTokenFromMapOrDb,
   getBundleFromMapOrDb,
 } from "../EntityManager";
+import { Pool } from "../../model";
 
 export const createToken = async (mctx: MappingContext, currency: string) => {
   const latestBlock = mctx.blocks[mctx.blocks.length - 1];
@@ -159,21 +159,13 @@ export const initializeTokens = async (
 
 export const incrementTokensSwapCount = async (
   mctx: MappingContext,
-  log: Log,
-  id: string
+  pool: Pool
 ) => {
-  let poolId = getPoolId(id);
-  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
-  if (!pool) {
-    mctx.log.warn(`incrementTokensSwapCount: Pool ${poolId} not found`);
-    return;
-  }
-
   let token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
   let token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
 
   if (!token0 || !token1) {
-    mctx.log.warn(`incrementTokensSwapCount: Token not found for pool ${poolId}`);
+    mctx.log.warn(`incrementTokensSwapCount: Token not found for pool ${pool.id}`);
     return;
   }
 
@@ -181,14 +173,7 @@ export const incrementTokensSwapCount = async (
   token1.swapCount += ONE_BI;
 };
 
-export const updateTokenPrice = async (mctx: MappingContext, id: string) => {
-  let poolId = getPoolId(id);
-  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
-  if (!pool) {
-    mctx.log.warn(`updateTokenPrice: Pool ${poolId} not found`);
-    return null;
-  }
-
+export const updateTokenPrice = async (mctx: MappingContext, pool: Pool) => {
   const isToken0Base = config.baseTokenAddresses.some(
     (address) => getTokenId(address).toLowerCase() === pool.token0Id
   );

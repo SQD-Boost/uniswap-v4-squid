@@ -1,13 +1,10 @@
-import { TokenDayData } from "../../model";
+import { Pool, TokenDayData } from "../../model";
 import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import { ONE_BI, ZERO_BI } from "../constants/global.contant";
 import { DAY_MS, getDayIndex } from "../helpers/global.helper";
-import { getPoolId, getTokenDayDataId } from "../helpers/ids.helper";
-import {
-  getPoolFromMapOrDb,
-  getTokenDayDataFromMapOrDb,
-} from "../EntityManager";
+import { getTokenDayDataId } from "../helpers/ids.helper";
+import { getTokenDayDataFromMapOrDb } from "../EntityManager";
 
 export const createTokenDayData = (
   tokenDayDataId: string,
@@ -32,15 +29,8 @@ export const createTokenDayData = (
 export const incrementTokensDayDataSwapCount = async (
   mctx: MappingContext,
   log: Log,
-  id: string
+  pool: Pool
 ) => {
-  let poolId = getPoolId(id);
-  let pool = await getPoolFromMapOrDb(mctx.store, mctx.entities, poolId);
-  if (!pool) {
-    mctx.log.warn(`incrementTokensDayDataSwapCount: Pool ${poolId} not found`);
-    return;
-  }
-
   let token0DayDataId = getTokenDayDataId(pool.token0Id, log.block.timestamp);
   let token1DayDataId = getTokenDayDataId(pool.token1Id, log.block.timestamp);
 
