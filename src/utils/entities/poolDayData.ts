@@ -1,4 +1,4 @@
-import { Pool, PoolDayData } from "../../model";
+import { Pool, PoolDayData, Token } from "../../model";
 import { config, MappingContext } from "../../main";
 import { Log } from "../../processor";
 import {
@@ -16,10 +16,7 @@ import {
   getPricesFromSqrtPriceX96,
 } from "../helpers/global.helper";
 import { getPoolDayDataId } from "../helpers/ids.helper";
-import {
-  getTokenFromMapOrDb,
-  getPoolDayDataFromMapOrDb,
-} from "../EntityManager";
+import { getPoolDayDataFromMapOrDb } from "../EntityManager";
 
 export const createPoolDayData = (
   poolDayDataId: string,
@@ -85,6 +82,8 @@ export const updatePoolDayData = async (
   mctx: MappingContext,
   log: Log,
   pool: Pool,
+  token0: Token,
+  token1: Token,
   liquidity: bigint,
   sqrtPriceX96: bigint,
   tick: number,
@@ -138,12 +137,6 @@ export const updatePoolDayData = async (
   let fee1USD = 0;
 
   if (swappedAmount0 > ZERO_BI) {
-    const token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
-    if (!token0) {
-      mctx.log.warn(`updatePoolDayData: Token ${pool.token0Id} not found`);
-      return;
-    }
-
     fee0 =
       BigInt(fee) === BASE_FEE
         ? swappedAmount0
@@ -161,12 +154,6 @@ export const updatePoolDayData = async (
     fee0USD =
       Number(convertTokenToDecimal(fee0, pool.token0Decimals)) * token0.price;
   } else if (swappedAmount1 > ZERO_BI) {
-    const token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
-    if (!token1) {
-      mctx.log.warn(`updatePoolDayData: Token ${pool.token1Id} not found`);
-      return;
-    }
-
     fee1 =
       BigInt(fee) === BASE_FEE
         ? swappedAmount1

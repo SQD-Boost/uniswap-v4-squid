@@ -3,6 +3,7 @@ import { Log } from "../processor";
 import * as poolManagerAbi from "../abi/poolManager";
 import {
   createToken,
+  getPoolTokens,
   incrementTokensSwapCount,
   updateTokenPrice,
 } from "../utils/entities/token";
@@ -147,17 +148,26 @@ export const handleSwap = async (mctx: MappingContext, log: Log) => {
     return;
   }
 
-  await incrementTokensSwapCount(mctx, pool);
+  const tokens = await getPoolTokens(mctx, pool);
+  if (!tokens) {
+    return;
+  }
+  const { token0, token1 } = tokens;
+
+  incrementTokensSwapCount(token0, token1);
+
   if (config.permissionRecordTx.tokendaydata) {
     await incrementTokensDayDataSwapCount(mctx, log, pool);
   }
   if (config.permissionRecordTx.tokenhourdata) {
     await incrementTokensHourDataSwapCount(mctx, log, pool);
   }
-  const { volumeUSDAdded, feeUSDAdded } = await updatePoolStates(
+  const { volumeUSDAdded, feeUSDAdded } = updatePoolStates(
     mctx,
     log,
     pool,
+    token0,
+    token1,
     tick,
     liquidity,
     sqrtPriceX96,
@@ -172,6 +182,8 @@ export const handleSwap = async (mctx: MappingContext, log: Log) => {
       mctx,
       log,
       pool,
+      token0,
+      token1,
       liquidity,
       sqrtPriceX96,
       tick,
@@ -185,6 +197,8 @@ export const handleSwap = async (mctx: MappingContext, log: Log) => {
       mctx,
       log,
       pool,
+      token0,
+      token1,
       liquidity,
       sqrtPriceX96,
       tick,

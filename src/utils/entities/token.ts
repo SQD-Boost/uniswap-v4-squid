@@ -157,18 +157,24 @@ export const initializeTokens = async (
   }
 };
 
-export const incrementTokensSwapCount = async (
+export const getPoolTokens = async (
   mctx: MappingContext,
   pool: Pool
-) => {
-  let token0 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id);
-  let token1 = await getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id);
+): Promise<{ token0: Token; token1: Token } | null> => {
+  const [token0, token1] = await Promise.all([
+    getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token0Id),
+    getTokenFromMapOrDb(mctx.store, mctx.entities, pool.token1Id),
+  ]);
 
   if (!token0 || !token1) {
-    mctx.log.warn(`incrementTokensSwapCount: Token not found for pool ${pool.id}`);
-    return;
+    mctx.log.warn(`getPoolTokens: Token not found for pool ${pool.id}`);
+    return null;
   }
 
+  return { token0, token1 };
+};
+
+export const incrementTokensSwapCount = (token0: Token, token1: Token) => {
   token0.swapCount += ONE_BI;
   token1.swapCount += ONE_BI;
 };
