@@ -52,6 +52,7 @@ let tokensReady = false;
 
 let pendingAddresses = new Set<string>();
 const BATCH_THRESHOLD = 4000;
+const MAX_TOKENS_LIMIT = 2_400_000;
 
 let lastState: { height: number; hash: string } | undefined;
 
@@ -182,8 +183,20 @@ processor.run(db, async (ctx) => {
     }
   }
 
-  if (ctx.isHead) tokensReady = true;
+  if (tokens.length >= MAX_TOKENS_LIMIT || ctx.isHead) {
+    tokensReady = true;
 
-  ctx.log.info(`tokens: ${tokens.length}`);
+    if (tokens.length >= MAX_TOKENS_LIMIT) {
+      ctx.log.info(
+        `Token limit of ${MAX_TOKENS_LIMIT.toLocaleString()} reached. Stopping collection.`
+      );
+    } else {
+      ctx.log.info(
+        `Token collection complete: ${tokens.length.toLocaleString()} tokens stored.`
+      );
+    }
+  }
+
+  ctx.log.info(`tokens: ${tokens.length.toLocaleString()}`);
   ctx.store.setForceFlush(true);
 });
