@@ -53,16 +53,21 @@ let tokensReady = false;
 let pendingAddresses = new Set<string>();
 const BATCH_THRESHOLD = 4000;
 
+let lastState: { height: number; hash: string } | undefined;
+
 let db = new Database({
   tables: {},
   dest: new LocalDest(`./assets/${config.chainTag}`),
   chunkSizeMb: Infinity,
   hooks: {
     async onStateRead(dest) {
+      if (lastState) {
+        return lastState;
+      }
+
       if (await dest.exists("tokens.br")) {
         try {
           const fileContent = await dest.readFile("tokens.br");
-
           const buffer = Buffer.from(fileContent, "base64");
 
           if (buffer.length === 0) {
@@ -75,21 +80,25 @@ let db = new Database({
             hash,
             tokens: retrievedTokens,
           }: Metadata = JSON.parse(decompressed.toString());
+
           if (!tokensInitialized) {
             tokens = retrievedTokens;
             tokensSet = new Set(retrievedTokens.map((token) => token[0]));
             tokensInitialized = true;
           }
-          return { height, hash };
+
+          lastState = { height, hash };
+          return lastState;
         } catch (error) {
           console.error("Error reading/decompressing tokens.br:", error);
           return undefined;
         }
-      } else {
-        return undefined;
       }
+      return undefined;
     },
     async onStateUpdate(dest, info) {
+      lastState = { height: info.height, hash: info.hash };
+
       if (tokensReady) {
         let metadata: Metadata = {
           ...info,
