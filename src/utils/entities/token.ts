@@ -1,12 +1,9 @@
-import * as erc20Abi from "../../abi/ERC20";
-import * as ERC20NameBytesAbi from "../../abi/ERC20NameBytes";
-import * as ERC20SymbolBytes from "../../abi/ERC20SymbolBytes";
 import { Token } from "../../model";
 import { config, MappingContext } from "../../main";
 import { ONE_BI, ZERO_ADDRESS } from "../constants/global.contant";
 import { DataHandlerContext } from "@subsquid/evm-processor";
 import { Store } from "@subsquid/typeorm-store";
-import { hexToString, sanitizeString } from "../helpers/global.helper";
+import { sanitizeString } from "../helpers/global.helper";
 import { In } from "typeorm";
 import { getBundleId, getTokenId } from "../helpers/ids.helper";
 import { ZERO_BI } from "../constants/global.contant";
@@ -17,50 +14,16 @@ import {
   getBundleFromMapOrDb,
 } from "../EntityManager";
 import { Pool } from "../../model";
+import { fetchTokensMetadata } from "../helpers/viem.helper";
 
 export const createToken = async (mctx: MappingContext, currency: string) => {
   const latestBlock = mctx.blocks[mctx.blocks.length - 1];
-  const erc20Contract = new erc20Abi.Contract(
-    mctx,
-    latestBlock.header,
-    currency
+
+  const [metadata] = await fetchTokensMetadata(
+    [currency],
+    config.chainId,
+    config.rpcUrl
   );
-  let symbol = "UNKNOWN";
-  let name = "Unknown Token";
-  let decimals = 18;
-
-  try {
-    [symbol, name, decimals] = await Promise.all([
-      erc20Contract.symbol(),
-      erc20Contract.name(),
-      erc20Contract.decimals(),
-    ]);
-  } catch (error) {
-    try {
-      const erc20NameContract = new ERC20NameBytesAbi.Contract(
-        mctx,
-        latestBlock.header,
-        currency
-      );
-      const erc20SymbolContract = new ERC20SymbolBytes.Contract(
-        mctx,
-        latestBlock.header,
-        currency
-      );
-      [symbol, name, decimals] = await Promise.all([
-        erc20SymbolContract.symbol(),
-        erc20NameContract.name(),
-        erc20Contract.decimals(),
-      ]);
-
-      symbol = hexToString(symbol);
-      name = hexToString(name);
-    } catch (error: any) {
-      mctx.log.warn(
-        `Error getting decimals for token ${currency} : ${error.message}`
-      );
-    }
-  }
 
   const tokenId = getTokenId(currency);
 
@@ -70,9 +33,9 @@ export const createToken = async (mctx: MappingContext, currency: string) => {
 
   return new Token({
     id: tokenId,
-    name: sanitizeString(name),
-    symbol: sanitizeString(symbol),
-    decimals: decimals,
+    name: metadata.name,
+    symbol: metadata.symbol,
+    decimals: metadata.decimals,
     price: isTokenStable ? 1 : 0,
     poolCount: 0,
     swapCount: ZERO_BI,
