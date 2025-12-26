@@ -18,8 +18,19 @@ import {
   getAmount0,
   getAmount1,
 } from "../helpers/global.helper";
-import { getManagerId, getPoolId, getPositionId } from "../helpers/ids.helper";
-import { getPoolFromMapOrDb, getPositionFromMapOrDb } from "../EntityManager";
+import {
+  getManagerId,
+  getPoolId,
+  getPositionId,
+  getDirectPositionId,
+  getWalletId,
+} from "../helpers/ids.helper";
+import {
+  getPoolFromMapOrDb,
+  getPositionFromMapOrDb,
+  getWalletFromMapOrDb,
+} from "../EntityManager";
+import { createWallet } from "./wallet";
 
 export const createPositionUpdateOwner = (log: Log, nftId: bigint) => {
   const positionId = getPositionId(log.address, nftId);
@@ -44,6 +55,36 @@ export const createPositionUpdateOwner = (log: Log, nftId: bigint) => {
   return position;
 };
 
+export const createDirectPosition = (
+  log: Log,
+  directPositionId: string,
+  poolId: string,
+  walletId: string,
+  tickLower: number,
+  tickUpper: number
+) => {
+  const position = new Position({
+    id: directPositionId,
+    nftId: undefined,
+    lowerTick: tickLower,
+    upperTick: tickUpper,
+    liquidity: ZERO_BI,
+    amount0: ZERO_BI,
+    amount0D: ZERO_STRING,
+    amount1: ZERO_BI,
+    amount1D: ZERO_STRING,
+    coreTotalUSD: 0,
+    ratio: 0,
+    managerId: undefined,
+    poolId: poolId,
+    ownerId: walletId,
+    chainId: config.chainId,
+    blockNumber: BigInt(log.block.height),
+    timestamp: BigInt(log.block.timestamp),
+  });
+  return position;
+};
+
 export const updatePositionAndPool = async (
   mctx: MappingContext,
   log: Log,
@@ -51,10 +92,9 @@ export const updatePositionAndPool = async (
   liquidityDelta: bigint,
   salt: string,
   tickLower: number,
-  tickUpper: number
+  tickUpper: number,
+  sender: string
 ) => {
-  const nftId = parseInt(salt, 16);
-  let positionId = getPositionId(config.nftPositionManager, nftId);
   let poolId = getPoolId(id);
 
   if (liquidityDelta === ZERO_BI) {
@@ -98,13 +138,51 @@ export const updatePositionAndPool = async (
     }
   }
 
+  const nftId = parseInt(salt, 16);
+  let positionId = getPositionId(config.nftPositionManager, nftId);
   let position = await getPositionFromMapOrDb(
     mctx.store,
     mctx.entities,
     positionId
   );
+
   if (!position) {
-    return;
+    const directPositionId = getDirectPositionId(
+      poolId,
+      sender,
+      tickLower,
+      tickUpper,
+      salt
+    );
+    position = await getPositionFromMapOrDb(
+      mctx.store,
+      mctx.entities,
+      directPositionId
+    );
+
+    if (!position) {
+      const walletId = getWalletId(sender);
+      let wallet = await getWalletFromMapOrDb(
+        mctx.store,
+        mctx.entities,
+        walletId
+      );
+      if (!wallet) {
+        wallet = createWallet(sender);
+        mctx.entities.walletsMap.set(walletId, wallet);
+      }
+
+      position = createDirectPosition(
+        log,
+        directPositionId,
+        poolId,
+        walletId,
+        tickLower,
+        tickUpper
+      );
+      mctx.entities.positionsMap.set(directPositionId, position);
+    }
+    positionId = directPositionId;
   }
 
   position.poolId = poolId;
@@ -383,6 +461,8 @@ export async function updateAllPositionsCoreTotalUSD(
     skip += batchSize;
   }
 
-  mctx.log.info(`updateAllPositionsCoreTotalUSD completed in ${Date.now() - startTime}ms`);
+  mctx.log.info(
+    `updateAllPositionsCoreTotalUSD completed in ${Date.now() - startTime}ms`
+  );
   return processed;
 }

@@ -24,6 +24,16 @@ export const getPositionId = (
   return `${config.chainId}-${positionManagerAddress}-${nftId}`;
 };
 
+export const getDirectPositionId = (
+  poolId: string,
+  sender: string,
+  tickLower: number,
+  tickUpper: number,
+  salt: string
+) => {
+  return `${config.chainId}-direct-${poolId}-${sender}-${tickLower}-${tickUpper}-${salt}`;
+};
+
 export const getTokenId = (tokenAddress: string) => {
   return `${config.chainId}-${tokenAddress}`;
 };

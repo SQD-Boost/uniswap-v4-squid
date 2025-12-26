@@ -30,11 +30,11 @@ type Wallet @entity {
 }
 
 type Position @entity {
-  " Position Manager + NFT ID "
+  " Position Manager + NFT ID (for NFT positions) or poolId-owner-ticks-salt (for direct positions) "
   id: ID!
 
-  " id of the non fungible position "
-  nftId: BigInt!
+  " id of the non fungible position (null for direct pool positions) "
+  nftId: BigInt
 
   " lower tick of the position "
   lowerTick: Int!
@@ -63,8 +63,9 @@ type Position @entity {
 
   coreTotalUSD: Float!
 
-  managerId: ID!
-  manager: Manager!
+  " position manager address (null for direct pool positions) "
+  managerId: ID
+  manager: Manager
 
   poolId: ID
   pool: Pool

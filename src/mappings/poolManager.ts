@@ -106,6 +106,13 @@ export const handleModifyLiquidity = async (mctx: MappingContext, log: Log) => {
   let { id, liquidityDelta, salt, sender, tickLower, tickUpper } =
     poolManagerAbi.events.ModifyLiquidity.decode(log);
 
+  const walletId = getWalletId(sender);
+  let wallet = await getWalletFromMapOrDb(mctx.store, mctx.entities, walletId);
+  if (!wallet) {
+    wallet = createWallet(sender);
+    mctx.entities.walletsMap.set(walletId, wallet);
+  }
+
   await updatePositionAndPool(
     mctx,
     log,
@@ -113,15 +120,9 @@ export const handleModifyLiquidity = async (mctx: MappingContext, log: Log) => {
     liquidityDelta,
     salt,
     tickLower,
-    tickUpper
+    tickUpper,
+    sender
   );
-
-  const walletId = getWalletId(sender);
-  let wallet = await getWalletFromMapOrDb(mctx.store, mctx.entities, walletId);
-  if (!wallet) {
-    wallet = createWallet(sender);
-    mctx.entities.walletsMap.set(walletId, wallet);
-  }
 
   if (config.permissionRecordTx.modifyLiquidity) {
     await createModifyLiquidityReccord(
